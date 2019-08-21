@@ -1,11 +1,14 @@
 module Main exposing (main)
 
 import Bootstrap.Button as Button
+import Bootstrap.Card as Card
+import Bootstrap.Card.Block as Block
 import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
 import Bootstrap.Navbar as Navbar
 import Browser
-import Html exposing (a, br, div, footer, h1, header, p, small, text)
-import Html.Attributes exposing (class, href)
+import Html exposing (a, br, div, footer, h1, h4, h6, header, img, p, small, text)
+import Html.Attributes exposing (class, href, src)
 
 
 type alias Model =
@@ -57,7 +60,7 @@ view model =
     div []
         [ storeHeader
         , storeNav model
-        , Grid.container [ class "py-4" ] [ text "Content" ]
+        , productList
         , storeFooter
         ]
 
@@ -105,6 +108,44 @@ storeNav model =
                 ]
             ]
         |> Navbar.view model.navState
+
+
+productList : Html.Html Msg
+productList =
+    Grid.container [ class "py-4" ]
+        [ Grid.row []
+            [ Grid.col [ Col.md4 ]
+                [ productCard "MacBook Air" "Apple" "https://images-na.ssl-images-amazon.com/images/I/81UdIMh89YL._SL1500_.jpg"
+                ]
+            , Grid.col [ Col.md4 ]
+                [ productCard "Gamer Xtreme" "Cyberpower" "https://images-na.ssl-images-amazon.com/images/I/71DvG2FjM%2BL._SL1500_.jpg"
+                ]
+            , Grid.col [ Col.md4 ]
+                [ productCard "Galaxy A70" "Samsung" "https://images-na.ssl-images-amazon.com/images/I/61Ygdf5VvoL._SL1500_.jpg"
+                ]
+            ]
+        ]
+
+
+productCard : String -> String -> String -> Html.Html Msg
+productCard name brand imageUrl =
+    Card.config [ Card.attrs [ class "mb-3" ] ]
+        |> Card.imgTop [ src imageUrl, class "img-fluid" ] []
+        |> Card.block
+            [ Block.attrs [ class "d-flex justify-content-between align-items-end" ] ]
+            [ Block.custom <|
+                div []
+                    [ h6 [ class "card-title mb-1" ] [ text brand ]
+                    , h4 [ class "card-title mb-0" ] [ text name ]
+                    ]
+            , Block.custom <|
+                Button.button
+                    [ Button.secondary
+                    , Button.attrs [ class "float-right stretched-link" ]
+                    ]
+                    [ text "Detail" ]
+            ]
+        |> Card.view
 
 
 storeFooter : Html.Html Msg
