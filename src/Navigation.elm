@@ -1,0 +1,70 @@
+module Navigation exposing (storeFooter, storeHeader, storeNav)
+
+import Bootstrap.Button as Button
+import Bootstrap.Grid as Grid
+import Bootstrap.Navbar as Navbar
+import Html exposing (a, br, div, footer, h1, header, p, small, text)
+import Html.Attributes exposing (class, href)
+
+
+storeHeader : Html.Html msg
+storeHeader =
+    header [ class "py-4" ]
+        [ Grid.container [ class "text-center" ]
+            [ h1 []
+                [ a [ href "/" ]
+                    [ text "HoshiLe’s Store"
+                    ]
+                ]
+            ]
+        ]
+
+
+storeNav : Navbar.State -> (Navbar.State -> msg) -> Html.Html msg
+storeNav navState navMsg =
+    Navbar.config navMsg
+        |> Navbar.withAnimation
+        |> Navbar.collapseSmall
+        |> Navbar.dark
+        |> Navbar.attrs [ class "text-light" ]
+        |> Navbar.brand [ href "#" ] [ text "HoshiLe’s Store" ]
+        |> Navbar.items
+            [ Navbar.itemLink [ href "#" ] [ text "Home" ]
+            , Navbar.itemLink [ href "#" ] [ text "About" ]
+            , Navbar.itemLink [ href "#" ] [ text "Log in" ]
+            , Navbar.itemLink [ href "#" ] [ text "Sign up" ]
+            , Navbar.dropdown
+                { id = "navbar-dropdown"
+                , toggle = Navbar.dropdownToggle [] [ text "username" ]
+                , items =
+                    [ Navbar.dropdownItem [ href "#" ] [ text "Profile" ]
+                    , Navbar.dropdownItem [ href "#" ] [ text "Order History" ]
+                    , Navbar.dropdownDivider
+                    , Navbar.dropdownItem [ href "#" ] [ text "Log out" ]
+                    ]
+                }
+            ]
+        |> Navbar.customItems
+            [ Navbar.formItem []
+                [ Button.button [ Button.warning ] [ text "Cart" ]
+                ]
+            ]
+        |> Navbar.view navState
+
+
+storeFooter : Html.Html msg
+storeFooter =
+    footer [ class "py-4 bg-dark text-light" ]
+        [ Grid.container [ class "text-center" ]
+            [ p []
+                [ small []
+                    [ text "CSIS 3280 Project by Takanori Hoshi (300306402) and Ngoc Tin Le (300296440)"
+                    , br [] []
+                    , text "Design by "
+                    , a [ href "https://gihyo.jp/book/2018/978-4-297-10020-9" ]
+                        [ text "Bootstrap 4 Textbook of Frontend Development (Japanese)"
+                        ]
+                    ]
+                ]
+            ]
+        ]
