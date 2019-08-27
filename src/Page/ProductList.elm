@@ -1,31 +1,60 @@
-module ProductList exposing (productList)
+module Page.ProductList exposing (Model, Msg, init, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
-import FetchState exposing (FetchState(..))
+import Config
 import Html exposing (div, h4, h6, text)
 import Html.Attributes exposing (class, src)
+import Http
+import Json.Decode exposing (list)
 import Product exposing (Product)
 
 
-productList : FetchState (List Product) -> Html.Html msg
-productList state =
+type Model
+    = Loading
+    | Success (List Product)
+    | Failed String
+
+
+type Msg
+    = Receive (Result Http.Error (List Product))
+
+
+init : ( Model, Cmd Msg )
+init =
+    ( Loading
+    , Http.get
+        { url = Config.productApi
+        , expect = Http.expectJson Receive (list Product.decoder)
+        }
+    )
+
+
+update : Msg -> Model -> ( Model, Cmd msg )
+update msg model =
+    case msg of
+        Receive (Ok result) ->
+            ( Success result, Cmd.none )
+
+        Receive (Err error) ->
+            ( Failed (Debug.toString error), Cmd.none )
+
+
+view : Model -> Html.Html msg
+view model =
     Grid.container [ class "py-4" ]
         [ Grid.row []
-            (case state of
-                FetchNone ->
-                    [ Grid.col [] [ text "None" ] ]
-
-                FetchLoading ->
+            (case model of
+                Loading ->
                     [ Grid.col [] [ text "Loading..." ] ]
 
-                FetchSuccess list ->
+                Success list ->
                     List.map (\product -> Grid.col [ Col.md4 ] [ productCard product ]) list
 
-                FetchFailed message ->
+                Failed message ->
                     [ Grid.col [] [ text message ] ]
             )
         ]

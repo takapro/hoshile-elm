@@ -1,8 +1,6 @@
-module Product exposing (Product, fetchProductList)
+module Product exposing (Product, decoder)
 
-import FetchState exposing (FetchMsg(..), productApi)
-import Http
-import Json.Decode exposing (Decoder, field, list, map5, string)
+import Json.Decode exposing (Decoder, field, map5, string)
 import JsonUtil exposing (stringToFloat, stringToInt)
 
 
@@ -15,16 +13,8 @@ type alias Product =
     }
 
 
-fetchProductList : (FetchMsg (List Product) -> msg) -> Cmd msg
-fetchProductList toMsg =
-    Http.get
-        { url = productApi
-        , expect = Http.expectJson (Receive >> toMsg) (list productDecoder)
-        }
-
-
-productDecoder : Decoder Product
-productDecoder =
+decoder : Decoder Product
+decoder =
     map5 Product
         (field "id" stringToInt)
         (field "name" string)

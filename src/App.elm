@@ -2,22 +2,24 @@ module Main exposing (main)
 
 import Bootstrap.Navbar as Navbar
 import Browser
-import FetchState exposing (FetchMsg(..), FetchState(..), updateFetch)
 import Html exposing (div)
 import Navigation exposing (storeFooter, storeHeader, storeNav)
-import Product exposing (Product, fetchProductList)
-import ProductList exposing (productList)
+import Page.ProductList
 
 
 type alias Model =
     { navState : Navbar.State
-    , productList : FetchState (List Product)
+    , pageModel : PageModel
     }
+
+
+type PageModel
+    = ProductListModel Page.ProductList.Model
 
 
 type Msg
     = NavMsg Navbar.State
-    | ProductListMsg (FetchMsg (List Product))
+    | ProductListMsg Page.ProductList.Msg
 
 
 main : Program () Model Msg
@@ -35,11 +37,14 @@ init () =
     let
         ( navState, navCmd ) =
             Navbar.initialState NavMsg
+
+        ( pageModel, pageMsg ) =
+            Page.ProductList.init
     in
     ( { navState = navState
-      , productList = FetchNone
+      , pageModel = ProductListModel pageModel
       }
-    , Cmd.batch [ navCmd, fetchProductList ProductListMsg ]
+    , Cmd.batch [ navCmd, Cmd.map ProductListMsg pageMsg ]
     )
 
 
@@ -50,16 +55,16 @@ subscriptions model =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        NavMsg state ->
+    case ( msg, model.pageModel ) of
+        ( NavMsg state, _ ) ->
             ( { model | navState = state }, Cmd.none )
 
-        ProductListMsg fetchMsg ->
+        ( ProductListMsg pageMsg, ProductListModel pageModel ) ->
             let
-                ( state, cmd ) =
-                    updateFetch fetchMsg (fetchProductList ProductListMsg)
+                ( newModel, cmd ) =
+                    Page.ProductList.update pageMsg pageModel
             in
-            ( { model | productList = state }, cmd )
+            ( { model | pageModel = ProductListModel newModel }, cmd )
 
 
 view : Model -> Html.Html Msg
@@ -67,6 +72,13 @@ view model =
     div []
         [ storeHeader
         , storeNav model.navState NavMsg
-        , productList model.productList
+        , pageView model.pageModel
         , storeFooter
         ]
+
+
+pageView : PageModel -> Html.Html msg
+pageView pageModel =
+    case pageModel of
+        ProductListModel model ->
+            Page.ProductList.view model

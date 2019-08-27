@@ -1,8 +1,8 @@
-SRCS = src/*.elm
+SRCS = src/*.elm src/*/*.elm
 DEST = public/app.js
 
 $(DEST): $(SRCS)
-	elm make $(SRCS) --output $(DEST)
+	elm make src/App.elm --output $(DEST)
 
 format:
 	elm-format --yes $(SRCS)
