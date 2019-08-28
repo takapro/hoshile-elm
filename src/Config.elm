@@ -1,4 +1,8 @@
-module Config exposing (productApi)
+module Config exposing (productApi, title)
+
+
+title =
+    "HoshiLe’s Store"
 
 
 apiBase =

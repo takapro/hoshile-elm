@@ -3,6 +3,7 @@ module Navigation exposing (storeFooter, storeHeader, storeNav)
 import Bootstrap.Button as Button
 import Bootstrap.Grid as Grid
 import Bootstrap.Navbar as Navbar
+import Config
 import Html exposing (a, br, div, footer, h1, header, p, small, text)
 import Html.Attributes exposing (class, href)
 
@@ -12,10 +13,7 @@ storeHeader =
     header [ class "py-4" ]
         [ Grid.container [ class "text-center" ]
             [ h1 []
-                [ a [ href "/" ]
-                    [ text "HoshiLe’s Store"
-                    ]
-                ]
+                [ a [ href "/" ] [ text Config.title ] ]
             ]
         ]
 
@@ -27,7 +25,7 @@ storeNav navState navMsg =
         |> Navbar.collapseSmall
         |> Navbar.dark
         |> Navbar.attrs [ class "text-light" ]
-        |> Navbar.brand [ href "#" ] [ text "HoshiLe’s Store" ]
+        |> Navbar.brand [ href "#" ] [ text Config.title ]
         |> Navbar.items
             [ Navbar.itemLink [ href "#" ] [ text "Home" ]
             , Navbar.itemLink [ href "#" ] [ text "About" ]
