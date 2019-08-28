@@ -6,21 +6,23 @@ import Browser.Navigation as Nav
 import Config
 import Html exposing (Html, div)
 import Navigation exposing (storeFooter, storeHeader, storeNav)
+import Page.NotFound
 import Page.ProductDetail
 import Page.ProductList
+import Route exposing (Route)
 import Url exposing (Url)
 
 
 type alias Model =
-    { url : Url
-    , key : Nav.Key
+    { key : Nav.Key
     , navState : Navbar.State
     , page : Page
     }
 
 
 type Page
-    = ProductList Page.ProductList.Model
+    = NotFound
+    | ProductList Page.ProductList.Model
     | ProductDetail Page.ProductDetail.Model
 
 
@@ -50,16 +52,10 @@ init () url key =
         ( navState, navCmd ) =
             Navbar.initialState NavMsg
 
-        ( page, msg ) =
-            Page.ProductList.init
+        ( model, cmd ) =
+            goTo (Route.parse url) (Model key navState NotFound)
     in
-    ( { url = url
-      , key = key
-      , navState = navState
-      , page = ProductList page
-      }
-    , Cmd.batch [ navCmd, Cmd.map ProductListMsg msg ]
-    )
+    ( model, Cmd.batch [ navCmd, cmd ] )
 
 
 subscriptions : Model -> Sub Msg
@@ -67,11 +63,11 @@ subscriptions model =
     Navbar.subscriptions model.navState NavMsg
 
 
-update : Msg -> Model -> ( Model, Cmd msg )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         UrlChange url ->
-            ( { model | url = url }, Cmd.none )
+            goTo (Route.parse url) model
 
         UrlRequest (Browser.Internal url) ->
             ( model, Nav.pushUrl model.key (Url.toString url) )
@@ -85,9 +81,8 @@ update msg model =
         ProductListMsg pageMsg ->
             case model.page of
                 ProductList page ->
-                    updatePage model
-                        ProductList
-                        (Page.ProductList.update pageMsg page)
+                    updatePage model ProductList ProductListMsg <|
+                        Page.ProductList.update pageMsg page
 
                 _ ->
                     ( model, Cmd.none )
@@ -95,17 +90,31 @@ update msg model =
         ProductDetailMsg pageMsg ->
             case model.page of
                 ProductDetail page ->
-                    updatePage model
-                        ProductDetail
-                        (Page.ProductDetail.update pageMsg page)
+                    updatePage model ProductDetail ProductDetailMsg <|
+                        Page.ProductDetail.update pageMsg page
 
                 _ ->
                     ( model, Cmd.none )
 
 
-updatePage : Model -> (page -> Page) -> ( page, cmd ) -> ( Model, cmd )
-updatePage model f ( page, cmd ) =
-    ( { model | page = f page }, cmd )
+goTo : Maybe Route -> Model -> ( Model, Cmd Msg )
+goTo route model =
+    case route of
+        Nothing ->
+            ( { model | page = NotFound }, Cmd.none )
+
+        Just Route.Top ->
+            updatePage model ProductList ProductListMsg <|
+                Page.ProductList.init
+
+        Just (Route.Product id) ->
+            updatePage model ProductDetail ProductDetailMsg <|
+                Page.ProductDetail.init id
+
+
+updatePage : Model -> (page -> Page) -> (msg -> Msg) -> ( page, Cmd msg ) -> ( Model, Cmd Msg )
+updatePage model pageConstructor msgConstructor =
+    Tuple.mapBoth (\page -> { model | page = pageConstructor page }) (Cmd.map msgConstructor)
 
 
 view : Model -> Browser.Document Msg
@@ -122,11 +131,14 @@ view model =
     }
 
 
-pageView : Page -> Html msg
+pageView : Page -> Html Msg
 pageView page =
     case page of
+        NotFound ->
+            Page.NotFound.view
+
         ProductList model ->
-            Page.ProductList.view model
+            Html.map ProductListMsg (Page.ProductList.view model)
 
         ProductDetail model ->
-            Page.ProductDetail.view model
+            Html.map ProductDetailMsg (Page.ProductDetail.view model)

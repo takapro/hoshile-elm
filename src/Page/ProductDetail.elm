@@ -20,17 +20,17 @@ type Msg
     = Receive (Result Http.Error Product)
 
 
-init : ( Model, Cmd Msg )
-init =
+init : Int -> ( Model, Cmd Msg )
+init id =
     ( Loading
     , Http.get
-        { url = Config.productApi ++ "/1"
+        { url = Config.productApi ++ "/" ++ String.fromInt id
         , expect = Http.expectJson Receive Product.decoder
         }
     )
 
 
-update : Msg -> Model -> ( Model, Cmd msg )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Receive (Ok result) ->
@@ -40,7 +40,7 @@ update msg model =
             ( Failed (Debug.toString error), Cmd.none )
 
 
-view : Model -> Html msg
+view : Model -> Html Msg
 view model =
     Grid.container [ class "py-4" ]
         [ Grid.row []

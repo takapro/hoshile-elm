@@ -1,13 +1,12 @@
 module Page.ProductList exposing (Model, Msg, init, update, view)
 
-import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Config
-import Html exposing (Html, div, h4, h6, text)
-import Html.Attributes exposing (class, src)
+import Html exposing (Html, a, div, h4, h6, text)
+import Html.Attributes exposing (class, href, src)
 import Http
 import Json.Decode exposing (list)
 import Product exposing (Product)
@@ -33,7 +32,7 @@ init =
     )
 
 
-update : Msg -> Model -> ( Model, Cmd msg )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Receive (Ok result) ->
@@ -43,7 +42,7 @@ update msg model =
             ( Failed (Debug.toString error), Cmd.none )
 
 
-view : Model -> Html msg
+view : Model -> Html Msg
 view model =
     Grid.container [ class "py-4" ]
         [ Grid.row []
@@ -72,9 +71,9 @@ productCard product =
                     , h4 [ class "card-title mb-0" ] [ text product.name ]
                     ]
             , Block.custom <|
-                Button.button
-                    [ Button.secondary
-                    , Button.attrs [ class "float-right stretched-link" ]
+                a
+                    [ href ("/product/" ++ String.fromInt product.id)
+                    , class "btn btn-secondary stretched-link"
                     ]
                     [ text "Detail" ]
             ]
