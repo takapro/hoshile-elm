@@ -6,7 +6,7 @@ import Bootstrap.Card.Block as Block
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Config
-import Html exposing (div, h4, h6, text)
+import Html exposing (Html, div, h4, h6, text)
 import Html.Attributes exposing (class, src)
 import Http
 import Json.Decode exposing (list)
@@ -43,7 +43,7 @@ update msg model =
             ( Failed (Debug.toString error), Cmd.none )
 
 
-view : Model -> Html.Html msg
+view : Model -> Html msg
 view model =
     Grid.container [ class "py-4" ]
         [ Grid.row []
@@ -60,7 +60,7 @@ view model =
         ]
 
 
-productCard : Product -> Html.Html msg
+productCard : Product -> Html msg
 productCard product =
     Card.config [ Card.attrs [ class "mb-3" ] ]
         |> Card.imgTop [ src product.imageUrl, class "img-fluid" ] []

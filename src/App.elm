@@ -4,15 +4,15 @@ import Bootstrap.Navbar as Navbar
 import Browser
 import Browser.Navigation as Nav
 import Config
-import Html exposing (div)
+import Html exposing (Html, div)
 import Navigation exposing (storeFooter, storeHeader, storeNav)
 import Page.ProductDetail
 import Page.ProductList
-import Url
+import Url exposing (Url)
 
 
 type alias Model =
-    { url : Url.Url
+    { url : Url
     , key : Nav.Key
     , navState : Navbar.State
     , page : Page
@@ -25,7 +25,7 @@ type Page
 
 
 type Msg
-    = UrlChange Url.Url
+    = UrlChange Url
     | UrlRequest Browser.UrlRequest
     | NavMsg Navbar.State
     | ProductListMsg Page.ProductList.Msg
@@ -44,7 +44,7 @@ main =
         }
 
 
-init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init () url key =
     let
         ( navState, navCmd ) =
@@ -122,7 +122,7 @@ view model =
     }
 
 
-pageView : Page -> Html.Html msg
+pageView : Page -> Html msg
 pageView page =
     case page of
         ProductList model ->

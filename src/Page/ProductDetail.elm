@@ -4,7 +4,7 @@ import Bootstrap.Button as Button
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Config
-import Html exposing (h4, h6, img, p, text)
+import Html exposing (Html, h4, h6, img, p, text)
 import Html.Attributes exposing (class, src)
 import Http
 import Product exposing (Product)
@@ -40,7 +40,7 @@ update msg model =
             ( Failed (Debug.toString error), Cmd.none )
 
 
-view : Model -> Html.Html msg
+view : Model -> Html msg
 view model =
     Grid.container [ class "py-4" ]
         [ Grid.row []

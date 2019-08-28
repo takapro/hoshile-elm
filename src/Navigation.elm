@@ -4,11 +4,11 @@ import Bootstrap.Button as Button
 import Bootstrap.Grid as Grid
 import Bootstrap.Navbar as Navbar
 import Config
-import Html exposing (a, br, div, footer, h1, header, p, small, text)
+import Html exposing (Html, a, br, footer, h1, header, p, small, text)
 import Html.Attributes exposing (class, href)
 
 
-storeHeader : Html.Html msg
+storeHeader : Html msg
 storeHeader =
     header [ class "py-4" ]
         [ Grid.container [ class "text-center" ]
@@ -18,7 +18,7 @@ storeHeader =
         ]
 
 
-storeNav : Navbar.State -> (Navbar.State -> msg) -> Html.Html msg
+storeNav : Navbar.State -> (Navbar.State -> msg) -> Html msg
 storeNav navState navMsg =
     Navbar.config navMsg
         |> Navbar.withAnimation
@@ -50,7 +50,7 @@ storeNav navState navMsg =
         |> Navbar.view navState
 
 
-storeFooter : Html.Html msg
+storeFooter : Html msg
 storeFooter =
     footer [ class "py-4 bg-dark text-light" ]
         [ Grid.container [ class "text-center" ]
