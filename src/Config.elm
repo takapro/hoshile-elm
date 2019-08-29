@@ -1,4 +1,4 @@
-module Config exposing (productApi, title)
+module Config exposing (productApi, title, userApi)
 
 
 title : String
@@ -14,3 +14,8 @@ apiBase =
 productApi : String
 productApi =
     apiBase ++ "products"
+
+
+userApi : String
+userApi =
+    apiBase ++ "user"

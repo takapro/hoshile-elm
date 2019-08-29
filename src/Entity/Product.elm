@@ -1,7 +1,7 @@
-module Product exposing (Product, decoder)
+module Entity.Product exposing (Product, decoder)
 
 import Json.Decode exposing (Decoder, field, map5, string)
-import JsonUtil exposing (stringToFloat, stringToInt)
+import Util.JsonUtil exposing (stringToFloat, stringToInt)
 
 
 type alias Product =

@@ -1,21 +1,21 @@
 module Page.ProductList exposing (Model, Msg, init, update, view)
 
+import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Config
-import Html exposing (Html, a, div, h4, h6, text)
+import Entity.Product as Product exposing (Product)
+import Html exposing (Html, div, h4, h6, text)
 import Html.Attributes exposing (class, href, src)
 import Http
 import Json.Decode exposing (list)
-import Product exposing (Product)
+import Util.FetchState exposing (FetchState(..))
 
 
-type Model
-    = Loading
-    | Success (List Product)
-    | Failed String
+type alias Model =
+    FetchState (List Product)
 
 
 type Msg
@@ -39,7 +39,7 @@ update msg model =
             ( Success result, Cmd.none )
 
         Receive (Err error) ->
-            ( Failed (Debug.toString error), Cmd.none )
+            ( Failure (Debug.toString error), Cmd.none )
 
 
 view : Model -> Html Msg
@@ -53,7 +53,7 @@ view model =
                 Success list ->
                     List.map (\product -> Grid.col [ Col.md4 ] [ productCard product ]) list
 
-                Failed message ->
+                Failure message ->
                     [ Grid.col [] [ text message ] ]
             )
         ]
@@ -71,9 +71,12 @@ productCard product =
                     , h4 [ class "card-title mb-0" ] [ text product.name ]
                     ]
             , Block.custom <|
-                a
-                    [ href ("/product/" ++ String.fromInt product.id)
-                    , class "btn btn-secondary stretched-link"
+                Button.linkButton
+                    [ Button.secondary
+                    , Button.attrs
+                        [ href ("/product/" ++ String.fromInt product.id)
+                        , class "stretched-link"
+                        ]
                     ]
                     [ text "Detail" ]
             ]

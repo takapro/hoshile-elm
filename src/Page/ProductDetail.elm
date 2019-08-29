@@ -4,16 +4,15 @@ import Bootstrap.Button as Button
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Config
+import Entity.Product as Product exposing (Product)
 import Html exposing (Html, h4, h6, img, p, text)
 import Html.Attributes exposing (class, src)
 import Http
-import Product exposing (Product)
+import Util.FetchState exposing (FetchState(..))
 
 
-type Model
-    = Loading
-    | Success Product
-    | Failed String
+type alias Model =
+    FetchState Product
 
 
 type Msg
@@ -37,7 +36,7 @@ update msg model =
             ( Success result, Cmd.none )
 
         Receive (Err error) ->
-            ( Failed (Debug.toString error), Cmd.none )
+            ( Failure (Debug.toString error), Cmd.none )
 
 
 view : Model -> Html Msg
@@ -51,7 +50,7 @@ view model =
                 Success product ->
                     productView product
 
-                Failed message ->
+                Failure message ->
                     [ Grid.col [] [ text message ] ]
             )
         ]

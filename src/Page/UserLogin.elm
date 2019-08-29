@@ -6,26 +6,66 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
+import Config
+import Entity.User as User exposing (User)
 import Html exposing (Html, h3, text)
-import Html.Attributes exposing (class, for)
+import Html.Attributes exposing (class)
+import Http
+import Json.Encode as Encode
+import Util.FetchState exposing (FetchState(..))
 
 
 type alias Model =
-    ()
+    { email : String
+    , password : String
+    , fetchState : Maybe (FetchState User)
+    }
 
 
-type alias Msg =
-    ()
+type Msg
+    = Email String
+    | Password String
+    | Login
+    | Receive (Result Http.Error User)
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( (), Cmd.none )
+    ( Model "" "" Nothing, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        Email email ->
+            ( { model | email = email }, Cmd.none )
+
+        Password password ->
+            ( { model | password = password }, Cmd.none )
+
+        Login ->
+            ( { model | fetchState = Just Loading }, loginCmd model )
+
+        Receive (Ok result) ->
+            ( { model | fetchState = Just (Success result) }, Cmd.none )
+
+        Receive (Err error) ->
+            ( { model | fetchState = Just (Failure (Debug.toString error)) }, Cmd.none )
+
+
+loginCmd : Model -> Cmd Msg
+loginCmd { email, password } =
+    Http.post
+        { url = Config.userApi ++ "/login"
+        , body =
+            Http.jsonBody
+                (Encode.object
+                    [ ( "email", Encode.string email )
+                    , ( "password", Encode.string password )
+                    ]
+                )
+        , expect = Http.expectJson Receive User.decoder
+        }
 
 
 view : Model -> Html Msg
@@ -35,22 +75,39 @@ view model =
             [ Grid.col [ Col.md6 ]
                 ([ h3 [ class "mb-3" ] [ text "Please Log in" ]
                  ]
-                    ++ (if True then
-                            []
+                    ++ (case model.fetchState of
+                            Nothing ->
+                                []
 
-                        else
-                            []
+                            Just Loading ->
+                                [ text "Loading..." ]
+
+                            Just (Success user) ->
+                                [ text ("Success: " ++ user.name) ]
+
+                            Just (Failure error) ->
+                                [ text ("Failure: " ++ error) ]
                        )
                     ++ [ Form.form []
                             [ Form.group []
-                                [ Form.label [ for "email" ] [ text "Email" ]
-                                , Input.email [ Input.id "email" ]
+                                [ Form.label [] [ text "Email" ]
+                                , Input.email
+                                    [ Input.value model.email
+                                    , Input.onInput Email
+                                    ]
                                 ]
                             , Form.group []
-                                [ Form.label [ for "password" ] [ text "Password" ]
-                                , Input.password [ Input.id "password" ]
+                                [ Form.label [] [ text "Password" ]
+                                , Input.password
+                                    [ Input.value model.password
+                                    , Input.onInput Password
+                                    ]
                                 ]
-                            , Button.button [ Button.primary ] [ text "Log in" ]
+                            , Button.button
+                                [ Button.primary
+                                , Button.onClick Login
+                                ]
+                                [ text "Log in" ]
                             ]
                        ]
                 )

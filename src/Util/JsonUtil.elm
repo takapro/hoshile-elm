@@ -1,4 +1,4 @@
-module JsonUtil exposing (stringToFloat, stringToInt)
+module Util.JsonUtil exposing (stringToFloat, stringToInt)
 
 import Json.Decode exposing (Decoder, andThen, fail, float, int, oneOf, string, succeed)
 
