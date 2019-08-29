@@ -12,7 +12,7 @@ validate:
 	elm-format --validate $(SRCS) $(TESTS)
 
 lint:
-	elm-analyse
+	elm-analyse | grep -v '^INFO: '
 
 test:
-	elm-test
+	script -q /dev/null elm-test

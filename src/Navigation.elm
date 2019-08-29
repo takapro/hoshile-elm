@@ -25,11 +25,11 @@ storeNav navState navMsg =
         |> Navbar.collapseSmall
         |> Navbar.dark
         |> Navbar.attrs [ class "text-light" ]
-        |> Navbar.brand [ href "#" ] [ text Config.title ]
+        |> Navbar.brand [ href "/" ] [ text Config.title ]
         |> Navbar.items
-            [ Navbar.itemLink [ href "#" ] [ text "Home" ]
+            [ Navbar.itemLink [ href "/" ] [ text "Home" ]
             , Navbar.itemLink [ href "#" ] [ text "About" ]
-            , Navbar.itemLink [ href "#" ] [ text "Log in" ]
+            , Navbar.itemLink [ href "/login" ] [ text "Log in" ]
             , Navbar.itemLink [ href "#" ] [ text "Sign up" ]
             , Navbar.dropdown
                 { id = "navbar-dropdown"

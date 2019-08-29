@@ -7,6 +7,7 @@ import Url.Parser exposing ((</>), Parser, int, map, oneOf, s, top)
 type Route
     = Top
     | Product Int
+    | Login
 
 
 parse : Url -> Maybe Route
@@ -19,4 +20,5 @@ parser =
     oneOf
         [ map Top top
         , map Product (s "product" </> int)
+        , map Login (s "login")
         ]

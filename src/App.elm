@@ -9,6 +9,7 @@ import Navigation exposing (storeFooter, storeHeader, storeNav)
 import Page.NotFound
 import Page.ProductDetail
 import Page.ProductList
+import Page.UserLogin
 import Route exposing (Route)
 import Url exposing (Url)
 
@@ -24,6 +25,7 @@ type Page
     = NotFound
     | ProductList Page.ProductList.Model
     | ProductDetail Page.ProductDetail.Model
+    | UserLogin Page.UserLogin.Model
 
 
 type Msg
@@ -32,6 +34,7 @@ type Msg
     | NavMsg Navbar.State
     | ProductListMsg Page.ProductList.Msg
     | ProductDetailMsg Page.ProductDetail.Msg
+    | UserLoginMsg Page.UserLogin.Msg
 
 
 main : Program () Model Msg
@@ -96,6 +99,15 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        UserLoginMsg pageMsg ->
+            case model.page of
+                UserLogin page ->
+                    updatePage model UserLogin UserLoginMsg <|
+                        Page.UserLogin.update pageMsg page
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 goTo : Maybe Route -> Model -> ( Model, Cmd Msg )
 goTo route model =
@@ -110,6 +122,10 @@ goTo route model =
         Just (Route.Product id) ->
             updatePage model ProductDetail ProductDetailMsg <|
                 Page.ProductDetail.init id
+
+        Just Route.Login ->
+            updatePage model UserLogin UserLoginMsg <|
+                Page.UserLogin.init
 
 
 updatePage : Model -> (page -> Page) -> (msg -> Msg) -> ( page, Cmd msg ) -> ( Model, Cmd Msg )
@@ -142,3 +158,6 @@ pageView page =
 
         ProductDetail model ->
             Html.map ProductDetailMsg (Page.ProductDetail.view model)
+
+        UserLogin model ->
+            Html.map UserLoginMsg (Page.UserLogin.view model)
