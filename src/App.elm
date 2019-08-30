@@ -5,7 +5,6 @@ import Browser
 import Browser.Navigation as Nav
 import Config
 import Html exposing (Html, div)
-import Navigation exposing (storeFooter, storeHeader, storeNav)
 import Page.About
 import Page.NotFound
 import Page.ProductDetail
@@ -17,6 +16,9 @@ import Route exposing (Route)
 import Session
 import Task
 import Url exposing (Url)
+import View.Footer as Footer
+import View.Header as Header
+import View.Navigation as Navigation
 
 
 type alias Model =
@@ -193,10 +195,10 @@ view model =
     { title = Config.title
     , body =
         [ div []
-            [ storeHeader
-            , storeNav model.session model.navState NavMsg
+            [ Header.view
+            , Navigation.view model.session model.navState NavMsg
             , pageView model.page
-            , storeFooter
+            , Footer.view
             ]
         ]
     }

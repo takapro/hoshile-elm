@@ -1,26 +1,15 @@
-module Navigation exposing (storeFooter, storeHeader, storeNav)
+module View.Navigation exposing (view)
 
 import Bootstrap.Button as Button
-import Bootstrap.Grid as Grid
 import Bootstrap.Navbar as Navbar
 import Config
-import Html exposing (Html, a, br, footer, h1, header, p, small, text)
+import Html exposing (Html, text)
 import Html.Attributes exposing (class, href)
 import Session
 
 
-storeHeader : Html msg
-storeHeader =
-    header [ class "py-4" ]
-        [ Grid.container [ class "text-center" ]
-            [ h1 []
-                [ a [ href "/" ] [ text Config.title ] ]
-            ]
-        ]
-
-
-storeNav : Session.Model -> Navbar.State -> (Navbar.State -> msg) -> Html msg
-storeNav session navState navMsg =
+view : Session.Model -> Navbar.State -> (Navbar.State -> msg) -> Html msg
+view session navState navMsg =
     Navbar.config navMsg
         |> Navbar.withAnimation
         |> Navbar.collapseSmall
@@ -58,21 +47,3 @@ storeNav session navState navMsg =
                 ]
             ]
         |> Navbar.view navState
-
-
-storeFooter : Html msg
-storeFooter =
-    footer [ class "py-4 bg-dark text-light" ]
-        [ Grid.container [ class "text-center" ]
-            [ p []
-                [ small []
-                    [ text "CSIS 3280 Project by Takanori Hoshi (300306402) and Ngoc Tin Le (300296440)"
-                    , br [] []
-                    , text "Design by "
-                    , a [ href "https://gihyo.jp/book/2018/978-4-297-10020-9" ]
-                        [ text "Bootstrap 4 Textbook of Frontend Development (Japanese)"
-                        ]
-                    ]
-                ]
-            ]
-        ]

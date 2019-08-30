@@ -1,13 +1,11 @@
 module Page.UserLogin exposing (Model, Msg, init, update, view)
 
-import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button exposing (disabled, onClick, primary)
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input exposing (onInput, value)
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
-import Bootstrap.Spinner as Spinner
 import Config
 import Entity.User as User exposing (User)
 import Html exposing (Html, h3, text)
@@ -16,6 +14,7 @@ import Json.Encode as Encode
 import Session
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
+import View.CustomAlert as CustomAlert
 
 
 type alias Model =
@@ -78,15 +77,7 @@ view model =
                 (ListUtil.append3
                     [ h3 [ class "mb-3" ] [ text "Please Log in" ]
                     ]
-                    (case model.loginState of
-                        Just (Failure error) ->
-                            [ Alert.simpleDanger []
-                                [ text ("Login failed: " ++ error) ]
-                            ]
-
-                        _ ->
-                            []
-                    )
+                    (CustomAlert.errorIfFailure "Login" model.loginState)
                     [ Form.form []
                         [ Form.group []
                             [ Form.label [] [ text "Email" ]
@@ -97,14 +88,7 @@ view model =
                             , Input.password [ value model.password, onInput Password ]
                             ]
                         , Button.button [ primary, onClick Login, disabled (cantLogin model) ]
-                            (if model.loginState == Just Loading then
-                                [ Spinner.spinner [ Spinner.small, Spinner.attrs [ class "mr-2" ] ] []
-                                , text "Log in"
-                                ]
-
-                             else
-                                [ text "Log in" ]
-                            )
+                            (CustomAlert.spinnerLabel "Log in" model.loginState)
                         ]
                     ]
                 )

@@ -1,13 +1,11 @@
 module Page.UserProfile exposing (Model, Msg, init, update, view)
 
-import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button exposing (disabled, onClick, primary)
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input exposing (onInput, value)
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
-import Bootstrap.Spinner as Spinner
 import Config
 import Entity.User as User exposing (User)
 import Html exposing (Html, h3, hr, text)
@@ -16,6 +14,7 @@ import Json.Encode as Encode
 import Session
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
+import View.CustomAlert as CustomAlert
 
 
 type alias Model =
@@ -131,15 +130,11 @@ passwordCmd model =
 view : Model -> Html Msg
 view model =
     Grid.container [ class "py-4" ]
-        [ Grid.row [ Row.attrs [ class "justify-content-center" ] ]
-            (if model.user == Nothing then
-                [ Grid.col []
-                    [ Alert.simpleDanger []
-                        [ text "Not logged in." ]
-                    ]
-                ]
+        (if model.user == Nothing then
+            [ CustomAlert.error "Not logged in." ]
 
-             else
+         else
+            [ Grid.row [ Row.attrs [ class "justify-content-center" ] ]
                 [ Grid.col [ Col.md6 ]
                     (ListUtil.append3
                         (profileView model)
@@ -147,8 +142,8 @@ view model =
                         (passwordView model)
                     )
                 ]
-            )
-        ]
+            ]
+        )
 
 
 profileView : Model -> List (Html Msg)
@@ -156,15 +151,7 @@ profileView model =
     ListUtil.append3
         [ h3 [ class "mb-3" ] [ text "Profile" ]
         ]
-        (case model.profileState of
-            Just (Failure error) ->
-                [ Alert.simpleDanger []
-                    [ text ("Profile update failed: " ++ error) ]
-                ]
-
-            _ ->
-                []
-        )
+        (CustomAlert.errorIfFailure "Profile update" model.profileState)
         [ Form.form []
             [ Form.group []
                 [ Form.label [] [ text "Name" ]
@@ -175,14 +162,7 @@ profileView model =
                 , Input.email [ value model.email, onInput Email ]
                 ]
             , Button.button [ primary, onClick UpdateProfile, disabled (cantUpdateProfile model) ]
-                (if model.profileState == Just Loading then
-                    [ Spinner.spinner [ Spinner.small, Spinner.attrs [ class "mr-2" ] ] []
-                    , text "Update Profile"
-                    ]
-
-                 else
-                    [ text "Update Profile" ]
-                )
+                (CustomAlert.spinnerLabel "Update Profile" model.profileState)
             ]
         ]
 
@@ -192,15 +172,7 @@ passwordView model =
     ListUtil.append3
         [ h3 [ class "mb-3" ] [ text "Password" ]
         ]
-        (case model.passwordState of
-            Just (Failure error) ->
-                [ Alert.simpleDanger []
-                    [ text ("Password update failed: " ++ error) ]
-                ]
-
-            _ ->
-                []
-        )
+        (CustomAlert.errorIfFailure "Password update" model.passwordState)
         [ Form.form []
             [ Form.group []
                 [ Form.label [] [ text "Current Password" ]
@@ -215,13 +187,6 @@ passwordView model =
                 , Input.password [ value model.password2, onInput Password2 ]
                 ]
             , Button.button [ primary, onClick UpdatePassword, disabled (cantUpdatePassword model) ]
-                (if model.passwordState == Just Loading then
-                    [ Spinner.spinner [ Spinner.small, Spinner.attrs [ class "mr-2" ] ] []
-                    , text "Update Password"
-                    ]
-
-                 else
-                    [ text "Update Password" ]
-                )
+                (CustomAlert.spinnerLabel "Update Password" model.passwordState)
             ]
         ]

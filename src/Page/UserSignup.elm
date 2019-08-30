@@ -1,13 +1,11 @@
 module Page.UserSignup exposing (Model, Msg, init, update, view)
 
-import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button exposing (disabled, onClick, primary)
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input exposing (onInput, value)
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
-import Bootstrap.Spinner as Spinner
 import Config
 import Entity.User as User exposing (User)
 import Html exposing (Html, h3, text)
@@ -16,6 +14,7 @@ import Json.Encode as Encode
 import Session
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
+import View.CustomAlert as CustomAlert
 
 
 type alias Model =
@@ -90,15 +89,7 @@ view model =
                 (ListUtil.append3
                     [ h3 [ class "mb-3" ] [ text "Please Sign up" ]
                     ]
-                    (case model.signupState of
-                        Just (Failure error) ->
-                            [ Alert.simpleDanger []
-                                [ text ("Signup failed: " ++ error) ]
-                            ]
-
-                        _ ->
-                            []
-                    )
+                    (CustomAlert.errorIfFailure "Signup" model.signupState)
                     [ Form.form []
                         [ Form.group []
                             [ Form.label [] [ text "Name" ]
@@ -117,14 +108,7 @@ view model =
                             , Input.password [ value model.password2, onInput Password2 ]
                             ]
                         , Button.button [ primary, onClick Signup, disabled (cantSignup model) ]
-                            (if model.signupState == Just Loading then
-                                [ Spinner.spinner [ Spinner.small, Spinner.attrs [ class "mr-2" ] ] []
-                                , text "Sign up"
-                                ]
-
-                             else
-                                [ text "Sign up" ]
-                            )
+                            (CustomAlert.spinnerLabel "Sign up" model.signupState)
                         ]
                     ]
                 )
