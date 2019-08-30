@@ -27,5 +27,6 @@ suite =
         , testParse "Logout" "/logout" (Just Route.Logout)
         , testParse "Signup" "/signup" (Just Route.Signup)
         , testParse "Profile" "/profile" (Just Route.Profile)
+        , testParse "ShoppingCart" "/shoppingCart" (Just Route.ShoppingCart)
         , testParse "Invalid /zzz" "/zzz" Nothing
         ]

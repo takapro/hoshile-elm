@@ -1,12 +1,13 @@
 module Session exposing (Model, Msg(..), init, update)
 
 import Browser.Navigation as Nav
+import Entity.CartEntry exposing (CartEntry)
 import Entity.User exposing (User)
 
 
 type alias Model =
     { user : Maybe User
-    , shoppingCart : List ()
+    , shoppingCart : List CartEntry
     }
 
 

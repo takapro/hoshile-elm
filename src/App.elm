@@ -9,6 +9,7 @@ import Page.About
 import Page.NotFound
 import Page.ProductDetail
 import Page.ProductList
+import Page.ShoppingCart
 import Page.UserLogin
 import Page.UserProfile
 import Page.UserSignup
@@ -37,6 +38,7 @@ type Page
     | UserLogin Page.UserLogin.Model
     | UserSignup Page.UserSignup.Model
     | UserProfile Page.UserProfile.Model
+    | ShoppingCart Page.ShoppingCart.Model
 
 
 type Msg
@@ -49,6 +51,7 @@ type Msg
     | UserLoginMsg Page.UserLogin.Msg
     | UserSignupMsg Page.UserSignup.Msg
     | UserProfileMsg Page.UserProfile.Msg
+    | ShoppingCartMsg Page.ShoppingCart.Msg
 
 
 main : Program () Model Msg
@@ -149,6 +152,15 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        ShoppingCartMsg pageMsg ->
+            case model.page of
+                ShoppingCart page ->
+                    updatePage ShoppingCart ShoppingCartMsg model <|
+                        Page.ShoppingCart.update pageMsg page
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 goTo : Maybe Route -> Model -> ( Model, Cmd Msg )
 goTo route model =
@@ -181,6 +193,10 @@ goTo route model =
         Just Route.Profile ->
             updatePage UserProfile UserProfileMsg model <|
                 Page.UserProfile.init model.session.user
+
+        Just Route.ShoppingCart ->
+            updatePage ShoppingCart ShoppingCartMsg model <|
+                Page.ShoppingCart.init model.session.shoppingCart
 
 
 updatePage : (page -> Page) -> (msg -> Msg) -> Model -> ( page, Cmd msg ) -> ( Model, Cmd Msg )
@@ -227,3 +243,6 @@ pageView page =
 
         UserProfile model ->
             Html.map UserProfileMsg (Page.UserProfile.view model)
+
+        ShoppingCart model ->
+            Html.map ShoppingCartMsg (Page.ShoppingCart.view model)

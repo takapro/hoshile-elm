@@ -18,7 +18,7 @@ import View.CustomAlert as CustomAlert
 
 
 type alias Model =
-    { user : Maybe User
+    { token : Maybe String
     , name : String
     , email : String
     , curPassword : String
@@ -45,7 +45,7 @@ init : Maybe User -> ( Model, Cmd Msg )
 init maybeUser =
     case maybeUser of
         Just user ->
-            ( Model (Just user) user.name user.email "" "" "" Nothing Nothing, Cmd.none )
+            ( Model (Just user.token) user.name user.email "" "" "" Nothing Nothing, Cmd.none )
 
         Nothing ->
             ( Model Nothing "" "" "" "" "" Nothing Nothing, Cmd.none )
@@ -101,9 +101,9 @@ cantUpdatePassword model =
 
 profileCmd : Model -> Cmd Msg
 profileCmd model =
-    case model.user of
-        Just user ->
-            Fetch.putWithToken ReceiveProfile User.decoder (Config.userApi ++ "/profile") user.token <|
+    case model.token of
+        Just token ->
+            Fetch.putWithToken ReceiveProfile User.decoder (Config.userApi ++ "/profile") token <|
                 Encode.object
                     [ ( "name", Encode.string model.name )
                     , ( "email", Encode.string model.email )
@@ -115,9 +115,9 @@ profileCmd model =
 
 passwordCmd : Model -> Cmd Msg
 passwordCmd model =
-    case model.user of
-        Just user ->
-            Fetch.putWithToken ReceivePassword User.decoder (Config.userApi ++ "/password") user.token <|
+    case model.token of
+        Just token ->
+            Fetch.putWithToken ReceivePassword User.decoder (Config.userApi ++ "/password") token <|
                 Encode.object
                     [ ( "curPassword", Encode.string model.curPassword )
                     , ( "newPassword", Encode.string model.password1 )
@@ -130,7 +130,7 @@ passwordCmd model =
 view : Model -> Html Msg
 view model =
     Grid.container [ class "py-4" ]
-        (if model.user == Nothing then
+        (if model.token == Nothing then
             [ CustomAlert.error "Not logged in." ]
 
          else

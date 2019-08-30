@@ -40,9 +40,11 @@ view : Model -> Html Msg
 view model =
     Grid.container [ class "py-4" ]
         (CustomAlert.fetchState "Fetch" model <|
-            \list ->
+            \products ->
                 [ Grid.row []
-                    (list |> List.map (\product -> Grid.col [ Col.md4 ] [ productCard product ]))
+                    (products
+                        |> List.map (\product -> Grid.col [ Col.md4 ] [ productCard product ])
+                    )
                 ]
         )
 

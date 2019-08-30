@@ -12,6 +12,7 @@ type Route
     | Logout
     | Signup
     | Profile
+    | ShoppingCart
 
 
 parse : Url -> Maybe Route
@@ -29,4 +30,5 @@ parser =
         , map Logout (s "logout")
         , map Signup (s "signup")
         , map Profile (s "profile")
+        , map ShoppingCart (s "shoppingCart")
         ]
