@@ -1,10 +1,12 @@
 module Page.ProductList exposing (Model, Msg, init, update, view)
 
+import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
+import Bootstrap.Spinner as Spinner
 import Config
 import Entity.Product as Product exposing (Product)
 import Html exposing (Html, div, h4, h6, text)
@@ -48,13 +50,24 @@ view model =
         [ Grid.row []
             (case model of
                 Loading ->
-                    [ Grid.col [] [ text "Loading..." ] ]
-
-                Success list ->
-                    List.map (\product -> Grid.col [ Col.md4 ] [ productCard product ]) list
+                    [ Grid.col []
+                        [ Alert.simpleLight [ class "d-flex align-items-center" ]
+                            [ Spinner.spinner [ Spinner.grow ] []
+                            , div [ class "ml-3" ] [ text "Loading..." ]
+                            ]
+                        ]
+                    ]
 
                 Failure message ->
-                    [ Grid.col [] [ text message ] ]
+                    [ Grid.col []
+                        [ Alert.simpleDanger []
+                            [ text ("Fetch failed: " ++ message)
+                            ]
+                        ]
+                    ]
+
+                Success list ->
+                    list |> List.map (\product -> Grid.col [ Col.md4 ] [ productCard product ])
             )
         ]
 

@@ -1,11 +1,13 @@
 module Page.UserLogin exposing (Model, Msg, init, update, view)
 
-import Bootstrap.Button as Button
+import Bootstrap.Alert as Alert
+import Bootstrap.Button as Button exposing (disabled, onClick, primary)
 import Bootstrap.Form as Form
-import Bootstrap.Form.Input as Input
+import Bootstrap.Form.Input as Input exposing (onInput, value)
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
+import Bootstrap.Spinner as Spinner
 import Config
 import Entity.User as User exposing (User)
 import Html exposing (Html, h3, text)
@@ -14,6 +16,7 @@ import Http
 import Json.Encode as Encode
 import Session
 import Util.FetchState exposing (FetchState(..))
+import Util.ListUtil as ListUtil
 
 
 type alias Model =
@@ -54,6 +57,11 @@ update msg model wrapMsg sessionCmd =
             ( { model | fetchState = Just (Failure (Debug.toString error)) }, Cmd.none )
 
 
+cantLogin : Model -> Bool
+cantLogin model =
+    model.email == "" || model.password == "" || model.fetchState == Just Loading
+
+
 loginCmd : Model -> Cmd Msg
 loginCmd { email, password } =
     Http.post
@@ -74,43 +82,38 @@ view model =
     Grid.container [ class "py-4" ]
         [ Grid.row [ Row.attrs [ class "justify-content-center" ] ]
             [ Grid.col [ Col.md6 ]
-                ([ h3 [ class "mb-3" ] [ text "Please Log in" ]
-                 ]
-                    ++ (case model.fetchState of
-                            Nothing ->
-                                []
-
-                            Just Loading ->
-                                [ text "Loading..." ]
-
-                            Just (Success user) ->
-                                [ text ("Success: " ++ user.name) ]
-
-                            Just (Failure error) ->
-                                [ text ("Failure: " ++ error) ]
-                       )
-                    ++ [ Form.form []
-                            [ Form.group []
-                                [ Form.label [] [ text "Email" ]
-                                , Input.email
-                                    [ Input.value model.email
-                                    , Input.onInput Email
-                                    ]
-                                ]
-                            , Form.group []
-                                [ Form.label [] [ text "Password" ]
-                                , Input.password
-                                    [ Input.value model.password
-                                    , Input.onInput Password
-                                    ]
-                                ]
-                            , Button.button
-                                [ Button.primary
-                                , Button.onClick Login
-                                ]
-                                [ text "Log in" ]
+                (ListUtil.append3
+                    [ h3 [ class "mb-3" ] [ text "Please Log in" ]
+                    ]
+                    (case model.fetchState of
+                        Just (Failure error) ->
+                            [ Alert.simpleDanger []
+                                [ text ("Login failed: " ++ error) ]
                             ]
-                       ]
+
+                        _ ->
+                            []
+                    )
+                    [ Form.form []
+                        [ Form.group []
+                            [ Form.label [] [ text "Email" ]
+                            , Input.email [ value model.email, onInput Email ]
+                            ]
+                        , Form.group []
+                            [ Form.label [] [ text "Password" ]
+                            , Input.password [ value model.password, onInput Password ]
+                            ]
+                        , Button.button [ primary, onClick Login, disabled (cantLogin model) ]
+                            (if model.fetchState == Just Loading then
+                                [ Spinner.spinner [ Spinner.small, Spinner.attrs [ class "mr-2" ] ] []
+                                , text "Log in"
+                                ]
+
+                             else
+                                [ text "Log in" ]
+                            )
+                        ]
+                    ]
                 )
             ]
         ]

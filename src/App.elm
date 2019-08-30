@@ -146,7 +146,9 @@ goTo route model =
 
 updatePage : Model -> (page -> Page) -> (msg -> Msg) -> ( page, Cmd msg ) -> ( Model, Cmd Msg )
 updatePage model pageConstructor msgConstructor =
-    Tuple.mapBoth (\page -> { model | page = pageConstructor page }) (Cmd.map msgConstructor)
+    Tuple.mapBoth
+        (\page -> { model | page = pageConstructor page })
+        (Cmd.map msgConstructor)
 
 
 view : Model -> Browser.Document Msg

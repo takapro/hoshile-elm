@@ -1,11 +1,13 @@
 module Page.ProductDetail exposing (Model, Msg, init, update, view)
 
+import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
+import Bootstrap.Spinner as Spinner
 import Config
 import Entity.Product as Product exposing (Product)
-import Html exposing (Html, h4, h6, img, p, text)
+import Html exposing (Html, div, h4, h6, img, p, text)
 import Html.Attributes exposing (class, src)
 import Http
 import Util.FetchState exposing (FetchState(..))
@@ -45,13 +47,24 @@ view model =
         [ Grid.row []
             (case model of
                 Loading ->
-                    [ Grid.col [] [ text "Loading..." ] ]
+                    [ Grid.col []
+                        [ Alert.simpleLight [ class "d-flex align-items-center" ]
+                            [ Spinner.spinner [ Spinner.grow ] []
+                            , div [ class "ml-3" ] [ text "Loading..." ]
+                            ]
+                        ]
+                    ]
+
+                Failure message ->
+                    [ Grid.col []
+                        [ Alert.simpleDanger []
+                            [ text ("Fetch failed: " ++ message)
+                            ]
+                        ]
+                    ]
 
                 Success product ->
                     productView product
-
-                Failure message ->
-                    [ Grid.col [] [ text message ] ]
             )
         ]
 
