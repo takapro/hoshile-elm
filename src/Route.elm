@@ -10,6 +10,7 @@ type Route
     | Login
     | Logout
     | Signup
+    | Profile
 
 
 parse : Url -> Maybe Route
@@ -25,4 +26,5 @@ parser =
         , map Login (s "login")
         , map Logout (s "logout")
         , map Signup (s "signup")
+        , map Profile (s "profile")
         ]

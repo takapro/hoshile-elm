@@ -22,7 +22,7 @@ import Util.ListUtil as ListUtil
 type alias Model =
     { email : String
     , password : String
-    , fetchState : Maybe (FetchState User)
+    , loginState : Maybe (FetchState User)
     }
 
 
@@ -48,18 +48,18 @@ update msg model wrapMsg sessionCmd =
             ( { model | password = password }, Cmd.none )
 
         Login ->
-            ( { model | fetchState = Just Loading }, Cmd.map wrapMsg (loginCmd model) )
+            ( { model | loginState = Just Loading }, Cmd.map wrapMsg (loginCmd model) )
 
         Receive (Ok user) ->
             ( model, sessionCmd (Session.Login user "/") )
 
         Receive (Err error) ->
-            ( { model | fetchState = Just (Failure (Debug.toString error)) }, Cmd.none )
+            ( { model | loginState = Just (Failure (Debug.toString error)) }, Cmd.none )
 
 
 cantLogin : Model -> Bool
 cantLogin model =
-    model.email == "" || model.password == "" || model.fetchState == Just Loading
+    model.email == "" || model.password == "" || model.loginState == Just Loading
 
 
 loginCmd : Model -> Cmd Msg
@@ -85,7 +85,7 @@ view model =
                 (ListUtil.append3
                     [ h3 [ class "mb-3" ] [ text "Please Log in" ]
                     ]
-                    (case model.fetchState of
+                    (case model.loginState of
                         Just (Failure error) ->
                             [ Alert.simpleDanger []
                                 [ text ("Login failed: " ++ error) ]
@@ -104,7 +104,7 @@ view model =
                             , Input.password [ value model.password, onInput Password ]
                             ]
                         , Button.button [ primary, onClick Login, disabled (cantLogin model) ]
-                            (if model.fetchState == Just Loading then
+                            (if model.loginState == Just Loading then
                                 [ Spinner.spinner [ Spinner.small, Spinner.attrs [ class "mr-2" ] ] []
                                 , text "Log in"
                                 ]

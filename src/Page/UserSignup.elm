@@ -24,7 +24,7 @@ type alias Model =
     , email : String
     , password1 : String
     , password2 : String
-    , fetchState : Maybe (FetchState User)
+    , signupState : Maybe (FetchState User)
     }
 
 
@@ -58,19 +58,19 @@ update msg model wrapMsg sessionCmd =
             ( { model | password2 = password2 }, Cmd.none )
 
         Signup ->
-            ( { model | fetchState = Just Loading }, Cmd.map wrapMsg (signupCmd model) )
+            ( { model | signupState = Just Loading }, Cmd.map wrapMsg (signupCmd model) )
 
         Receive (Ok user) ->
             ( model, sessionCmd (Session.Login user "/") )
 
         Receive (Err error) ->
-            ( { model | fetchState = Just (Failure (Debug.toString error)) }, Cmd.none )
+            ( { model | signupState = Just (Failure (Debug.toString error)) }, Cmd.none )
 
 
 cantSignup : Model -> Bool
 cantSignup model =
     (model.name == "" || model.email == "" || model.password1 == "")
-        || (model.password1 /= model.password2 || model.fetchState == Just Loading)
+        || (model.password1 /= model.password2 || model.signupState == Just Loading)
 
 
 signupCmd : Model -> Cmd Msg
@@ -97,7 +97,7 @@ view model =
                 (ListUtil.append3
                     [ h3 [ class "mb-3" ] [ text "Please Sign up" ]
                     ]
-                    (case model.fetchState of
+                    (case model.signupState of
                         Just (Failure error) ->
                             [ Alert.simpleDanger []
                                 [ text ("Signup failed: " ++ error) ]
@@ -116,15 +116,15 @@ view model =
                             , Input.email [ value model.email, onInput Email ]
                             ]
                         , Form.group []
-                            [ Form.label [] [ text "Password1" ]
+                            [ Form.label [] [ text "Password" ]
                             , Input.password [ value model.password1, onInput Password1 ]
                             ]
                         , Form.group []
-                            [ Form.label [] [ text "Password2" ]
+                            [ Form.label [] [ text "Confirm Password" ]
                             , Input.password [ value model.password2, onInput Password2 ]
                             ]
                         , Button.button [ primary, onClick Signup, disabled (cantSignup model) ]
-                            (if model.fetchState == Just Loading then
+                            (if model.signupState == Just Loading then
                                 [ Spinner.spinner [ Spinner.small, Spinner.attrs [ class "mr-2" ] ] []
                                 , text "Sign up"
                                 ]

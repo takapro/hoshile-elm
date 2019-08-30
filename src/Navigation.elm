@@ -43,7 +43,7 @@ storeNav session navState navMsg =
                             { id = "navbar-dropdown"
                             , toggle = Navbar.dropdownToggle [] [ text user.name ]
                             , items =
-                                [ Navbar.dropdownItem [ href "#" ] [ text "Profile" ]
+                                [ Navbar.dropdownItem [ href "/profile" ] [ text "Profile" ]
                                 , Navbar.dropdownItem [ href "#" ] [ text "Order History" ]
                                 , Navbar.dropdownDivider
                                 , Navbar.dropdownItem [ href "/logout" ] [ text "Log out" ]

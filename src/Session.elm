@@ -13,6 +13,7 @@ type alias Model =
 type Msg
     = Login User String
     | Logout String
+    | Update User
 
 
 init : Model
@@ -28,3 +29,6 @@ update msg key model =
 
         Logout path ->
             ( { model | user = Nothing }, Nav.replaceUrl key path )
+
+        Update user ->
+            ( { model | user = Just user }, Cmd.none )
