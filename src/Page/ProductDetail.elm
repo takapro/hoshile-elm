@@ -9,8 +9,7 @@ import Config
 import Entity.Product as Product exposing (Product)
 import Html exposing (Html, div, h4, h6, img, p, text)
 import Html.Attributes exposing (class, src)
-import Http
-import Util.FetchState exposing (FetchState(..))
+import Util.Fetch as Fetch exposing (FetchState(..))
 
 
 type alias Model =
@@ -18,27 +17,22 @@ type alias Model =
 
 
 type Msg
-    = Receive (Result Http.Error Product)
+    = Receive (FetchState Product)
 
 
 init : Int -> ( Model, Cmd Msg )
 init id =
     ( Loading
-    , Http.get
-        { url = Config.productApi ++ "/" ++ String.fromInt id
-        , expect = Http.expectJson Receive Product.decoder
-        }
+    , Fetch.get Receive Product.decoder <|
+        (Config.productApi ++ "/" ++ String.fromInt id)
     )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update msg _ =
     case msg of
-        Receive (Ok result) ->
-            ( Success result, Cmd.none )
-
-        Receive (Err error) ->
-            ( Failure (Debug.toString error), Cmd.none )
+        Receive fetchState ->
+            ( fetchState, Cmd.none )
 
 
 view : Model -> Html Msg

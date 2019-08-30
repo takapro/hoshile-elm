@@ -12,10 +12,9 @@ import Config
 import Entity.User as User exposing (User)
 import Html exposing (Html, h3, text)
 import Html.Attributes exposing (autofocus, class)
-import Http
 import Json.Encode as Encode
 import Session
-import Util.FetchState exposing (FetchState(..))
+import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
 
 
@@ -34,7 +33,7 @@ type Msg
     | Password1 String
     | Password2 String
     | Signup
-    | Receive (Result Http.Error User)
+    | Receive (FetchState User)
 
 
 init : ( Model, Cmd Msg )
@@ -60,11 +59,11 @@ update msg model wrapMsg sessionCmd =
         Signup ->
             ( { model | signupState = Just Loading }, Cmd.map wrapMsg (signupCmd model) )
 
-        Receive (Ok user) ->
+        Receive (Success user) ->
             ( model, sessionCmd (Session.Login user "/") )
 
-        Receive (Err error) ->
-            ( { model | signupState = Just (Failure (Debug.toString error)) }, Cmd.none )
+        Receive fetchState ->
+            ( { model | signupState = Just fetchState }, Cmd.none )
 
 
 cantSignup : Model -> Bool
@@ -75,18 +74,12 @@ cantSignup model =
 
 signupCmd : Model -> Cmd Msg
 signupCmd { name, email, password1 } =
-    Http.post
-        { url = Config.userApi ++ "/signup"
-        , body =
-            Http.jsonBody
-                (Encode.object
-                    [ ( "name", Encode.string name )
-                    , ( "email", Encode.string email )
-                    , ( "password", Encode.string password1 )
-                    ]
-                )
-        , expect = Http.expectJson Receive User.decoder
-        }
+    Fetch.post Receive User.decoder (Config.userApi ++ "/signup") <|
+        Encode.object
+            [ ( "name", Encode.string name )
+            , ( "email", Encode.string email )
+            , ( "password", Encode.string password1 )
+            ]
 
 
 view : Model -> Html Msg

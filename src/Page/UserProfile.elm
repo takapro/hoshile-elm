@@ -12,10 +12,9 @@ import Config
 import Entity.User as User exposing (User)
 import Html exposing (Html, h3, hr, text)
 import Html.Attributes exposing (class)
-import Http
 import Json.Encode as Encode
 import Session
-import Util.FetchState exposing (FetchState(..))
+import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
 
 
@@ -38,21 +37,19 @@ type Msg
     | Password1 String
     | Password2 String
     | UpdateProfile
-    | ReceiveProfile (Result Http.Error User)
+    | ReceiveProfile (FetchState User)
     | UpdatePassword
-    | ReceivePassword (Result Http.Error User)
+    | ReceivePassword (FetchState User)
 
 
 init : Maybe User -> ( Model, Cmd Msg )
 init maybeUser =
-    ( case maybeUser of
+    case maybeUser of
         Just user ->
-            Model (Just user) user.name user.email "" "" "" Nothing Nothing
+            ( Model (Just user) user.name user.email "" "" "" Nothing Nothing, Cmd.none )
 
         Nothing ->
-            Model Nothing "" "" "" "" "" Nothing Nothing
-    , Cmd.none
-    )
+            ( Model Nothing "" "" "" "" "" Nothing Nothing, Cmd.none )
 
 
 update : Msg -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
@@ -76,20 +73,20 @@ update msg model wrapMsg sessionCmd =
         UpdateProfile ->
             ( { model | profileState = Just Loading }, Cmd.map wrapMsg (profileCmd model) )
 
-        ReceiveProfile (Ok user) ->
-            ( model, sessionCmd (Session.Update user) )
+        ReceiveProfile (Success user) ->
+            ( { model | profileState = Nothing }, sessionCmd (Session.Update user) )
 
-        ReceiveProfile (Err error) ->
-            ( { model | profileState = Just (Failure (Debug.toString error)) }, Cmd.none )
+        ReceiveProfile fetchState ->
+            ( { model | profileState = Just fetchState }, Cmd.none )
 
         UpdatePassword ->
             ( { model | passwordState = Just Loading }, Cmd.map wrapMsg (passwordCmd model) )
 
-        ReceivePassword (Ok user) ->
-            ( model, sessionCmd (Session.Update user) )
+        ReceivePassword (Success user) ->
+            ( { model | passwordState = Nothing }, sessionCmd (Session.Update user) )
 
-        ReceivePassword (Err error) ->
-            ( { model | passwordState = Just (Failure (Debug.toString error)) }, Cmd.none )
+        ReceivePassword fetchState ->
+            ( { model | passwordState = Just fetchState }, Cmd.none )
 
 
 cantUpdateProfile : Model -> Bool
@@ -104,33 +101,31 @@ cantUpdatePassword model =
 
 
 profileCmd : Model -> Cmd Msg
-profileCmd { name, email } =
-    Http.post
-        { url = Config.userApi ++ "/profile"
-        , body =
-            Http.jsonBody
-                (Encode.object
-                    [ ( "name", Encode.string name )
-                    , ( "email", Encode.string email )
+profileCmd model =
+    case model.user of
+        Just user ->
+            Fetch.putWithToken ReceiveProfile User.decoder (Config.userApi ++ "/profile") user.token <|
+                Encode.object
+                    [ ( "name", Encode.string model.name )
+                    , ( "email", Encode.string model.email )
                     ]
-                )
-        , expect = Http.expectJson ReceiveProfile User.decoder
-        }
+
+        Nothing ->
+            Cmd.none
 
 
 passwordCmd : Model -> Cmd Msg
-passwordCmd { curPassword, password1 } =
-    Http.post
-        { url = Config.userApi ++ "/password"
-        , body =
-            Http.jsonBody
-                (Encode.object
-                    [ ( "curPassword", Encode.string curPassword )
-                    , ( "newPassword", Encode.string password1 )
+passwordCmd model =
+    case model.user of
+        Just user ->
+            Fetch.putWithToken ReceivePassword User.decoder (Config.userApi ++ "/password") user.token <|
+                Encode.object
+                    [ ( "curPassword", Encode.string model.curPassword )
+                    , ( "newPassword", Encode.string model.password1 )
                     ]
-                )
-        , expect = Http.expectJson ReceivePassword User.decoder
-        }
+
+        Nothing ->
+            Cmd.none
 
 
 view : Model -> Html Msg

@@ -12,10 +12,9 @@ import Config
 import Entity.User as User exposing (User)
 import Html exposing (Html, h3, text)
 import Html.Attributes exposing (autofocus, class)
-import Http
 import Json.Encode as Encode
 import Session
-import Util.FetchState exposing (FetchState(..))
+import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
 
 
@@ -30,7 +29,7 @@ type Msg
     = Email String
     | Password String
     | Login
-    | Receive (Result Http.Error User)
+    | Receive (FetchState User)
 
 
 init : ( Model, Cmd Msg )
@@ -50,11 +49,11 @@ update msg model wrapMsg sessionCmd =
         Login ->
             ( { model | loginState = Just Loading }, Cmd.map wrapMsg (loginCmd model) )
 
-        Receive (Ok user) ->
+        Receive (Success user) ->
             ( model, sessionCmd (Session.Login user "/") )
 
-        Receive (Err error) ->
-            ( { model | loginState = Just (Failure (Debug.toString error)) }, Cmd.none )
+        Receive fetchState ->
+            ( { model | loginState = Just fetchState }, Cmd.none )
 
 
 cantLogin : Model -> Bool
@@ -64,17 +63,11 @@ cantLogin model =
 
 loginCmd : Model -> Cmd Msg
 loginCmd { email, password } =
-    Http.post
-        { url = Config.userApi ++ "/login"
-        , body =
-            Http.jsonBody
-                (Encode.object
-                    [ ( "email", Encode.string email )
-                    , ( "password", Encode.string password )
-                    ]
-                )
-        , expect = Http.expectJson Receive User.decoder
-        }
+    Fetch.post Receive User.decoder (Config.userApi ++ "/login") <|
+        Encode.object
+            [ ( "email", Encode.string email )
+            , ( "password", Encode.string password )
+            ]
 
 
 view : Model -> Html Msg

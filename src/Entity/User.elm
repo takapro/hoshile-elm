@@ -4,7 +4,7 @@ import Json.Decode exposing (Decoder, bool, field, map5, string)
 
 
 type alias User =
-    { session : String
+    { token : String
     , name : String
     , email : String
     , shoppingCart : String
@@ -15,7 +15,7 @@ type alias User =
 decoder : Decoder User
 decoder =
     map5 User
-        (field "session" string)
+        (field "token" string)
         (field "name" string)
         (field "email" string)
         (field "shoppingCart" string)
