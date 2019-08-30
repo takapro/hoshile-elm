@@ -11,11 +11,14 @@ import Page.ProductDetail
 import Page.ProductList
 import Page.UserLogin
 import Route exposing (Route)
+import Session
+import Task
 import Url exposing (Url)
 
 
 type alias Model =
     { key : Nav.Key
+    , session : Session.Model
     , navState : Navbar.State
     , page : Page
     }
@@ -31,6 +34,7 @@ type Page
 type Msg
     = UrlChange Url
     | UrlRequest Browser.UrlRequest
+    | SessionMsg Session.Msg
     | NavMsg Navbar.State
     | ProductListMsg Page.ProductList.Msg
     | ProductDetailMsg Page.ProductDetail.Msg
@@ -56,7 +60,7 @@ init () url key =
             Navbar.initialState NavMsg
 
         ( model, cmd ) =
-            goTo (Route.parse url) (Model key navState NotFound)
+            goTo (Route.parse url) (Model key Session.init navState NotFound)
     in
     ( model, Cmd.batch [ navCmd, cmd ] )
 
@@ -64,6 +68,11 @@ init () url key =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Navbar.subscriptions model.navState NavMsg
+
+
+sessionCmd : Session.Msg -> Cmd Msg
+sessionCmd msg =
+    Task.perform identity <| Task.succeed (SessionMsg msg)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -77,6 +86,10 @@ update msg model =
 
         UrlRequest (Browser.External href) ->
             ( model, Nav.load href )
+
+        SessionMsg sessionMsg ->
+            Tuple.mapFirst (\session -> { model | session = session }) <|
+                Session.update sessionMsg model.key model.session
 
         NavMsg state ->
             ( { model | navState = state }, Cmd.none )
@@ -102,8 +115,8 @@ update msg model =
         UserLoginMsg pageMsg ->
             case model.page of
                 UserLogin page ->
-                    updatePage model UserLogin UserLoginMsg <|
-                        Page.UserLogin.update pageMsg page
+                    updatePage model UserLogin identity <|
+                        Page.UserLogin.update pageMsg page UserLoginMsg sessionCmd
 
                 _ ->
                     ( model, Cmd.none )
@@ -127,6 +140,9 @@ goTo route model =
             updatePage model UserLogin UserLoginMsg <|
                 Page.UserLogin.init
 
+        Just Route.Logout ->
+            ( model, sessionCmd (Session.Logout "/") )
+
 
 updatePage : Model -> (page -> Page) -> (msg -> Msg) -> ( page, Cmd msg ) -> ( Model, Cmd Msg )
 updatePage model pageConstructor msgConstructor =
@@ -139,7 +155,7 @@ view model =
     , body =
         [ div []
             [ storeHeader
-            , storeNav model.navState NavMsg
+            , storeNav model.session model.navState NavMsg
             , pageView model.page
             , storeFooter
             ]

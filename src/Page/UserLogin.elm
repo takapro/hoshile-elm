@@ -12,6 +12,7 @@ import Html exposing (Html, h3, text)
 import Html.Attributes exposing (class)
 import Http
 import Json.Encode as Encode
+import Session
 import Util.FetchState exposing (FetchState(..))
 
 
@@ -34,8 +35,8 @@ init =
     ( Model "" "" Nothing, Cmd.none )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Msg -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
+update msg model wrapMsg sessionCmd =
     case msg of
         Email email ->
             ( { model | email = email }, Cmd.none )
@@ -44,10 +45,10 @@ update msg model =
             ( { model | password = password }, Cmd.none )
 
         Login ->
-            ( { model | fetchState = Just Loading }, loginCmd model )
+            ( { model | fetchState = Just Loading }, Cmd.map wrapMsg (loginCmd model) )
 
-        Receive (Ok result) ->
-            ( { model | fetchState = Just (Success result) }, Cmd.none )
+        Receive (Ok user) ->
+            ( model, sessionCmd (Session.Login user "/") )
 
         Receive (Err error) ->
             ( { model | fetchState = Just (Failure (Debug.toString error)) }, Cmd.none )

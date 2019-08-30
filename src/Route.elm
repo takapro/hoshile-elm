@@ -8,6 +8,7 @@ type Route
     = Top
     | Product Int
     | Login
+    | Logout
 
 
 parse : Url -> Maybe Route
@@ -21,4 +22,5 @@ parser =
         [ map Top top
         , map Product (s "product" </> int)
         , map Login (s "login")
+        , map Logout (s "logout")
         ]

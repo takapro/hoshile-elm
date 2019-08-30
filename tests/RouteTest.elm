@@ -21,9 +21,8 @@ suite =
         [ testParse "ProductList" "/" (Just Route.Top)
         , testParse "ProductDetail 1" "/product/1" (Just (Route.Product 1))
         , testParse "Invalid /product" "/product" Nothing
-        , testParse "Invalid /product/" "/product/" Nothing
         , testParse "Invalid /product/x" "/product/x" Nothing
         , testParse "Login" "/login" (Just Route.Login)
-        , testParse "Invalid /login/x" "/login/x" Nothing
+        , testParse "Logout" "/logout" (Just Route.Logout)
         , testParse "Invalid /zzz" "/zzz" Nothing
         ]
