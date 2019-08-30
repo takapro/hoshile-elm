@@ -24,5 +24,6 @@ suite =
         , testParse "Invalid /product/x" "/product/x" Nothing
         , testParse "Login" "/login" (Just Route.Login)
         , testParse "Logout" "/logout" (Just Route.Logout)
+        , testParse "Signup" "/signup" (Just Route.Signup)
         , testParse "Invalid /zzz" "/zzz" Nothing
         ]

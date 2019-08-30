@@ -10,6 +10,7 @@ import Page.NotFound
 import Page.ProductDetail
 import Page.ProductList
 import Page.UserLogin
+import Page.UserSignup
 import Route exposing (Route)
 import Session
 import Task
@@ -29,6 +30,7 @@ type Page
     | ProductList Page.ProductList.Model
     | ProductDetail Page.ProductDetail.Model
     | UserLogin Page.UserLogin.Model
+    | UserSignup Page.UserSignup.Model
 
 
 type Msg
@@ -39,6 +41,7 @@ type Msg
     | ProductListMsg Page.ProductList.Msg
     | ProductDetailMsg Page.ProductDetail.Msg
     | UserLoginMsg Page.UserLogin.Msg
+    | UserSignupMsg Page.UserSignup.Msg
 
 
 main : Program () Model Msg
@@ -121,6 +124,15 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        UserSignupMsg pageMsg ->
+            case model.page of
+                UserSignup page ->
+                    updatePage model UserSignup identity <|
+                        Page.UserSignup.update pageMsg page UserSignupMsg sessionCmd
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 goTo : Maybe Route -> Model -> ( Model, Cmd Msg )
 goTo route model =
@@ -142,6 +154,10 @@ goTo route model =
 
         Just Route.Logout ->
             ( model, sessionCmd (Session.Logout "/") )
+
+        Just Route.Signup ->
+            updatePage model UserSignup UserSignupMsg <|
+                Page.UserSignup.init
 
 
 updatePage : Model -> (page -> Page) -> (msg -> Msg) -> ( page, Cmd msg ) -> ( Model, Cmd Msg )
@@ -179,3 +195,6 @@ pageView page =
 
         UserLogin model ->
             Html.map UserLoginMsg (Page.UserLogin.view model)
+
+        UserSignup model ->
+            Html.map UserSignupMsg (Page.UserSignup.view model)

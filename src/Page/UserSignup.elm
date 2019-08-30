@@ -1,4 +1,4 @@
-module Page.UserLogin exposing (Model, Msg, init, update, view)
+module Page.UserSignup exposing (Model, Msg, init, update, view)
 
 import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button exposing (disabled, onClick, primary)
@@ -20,35 +20,45 @@ import Util.ListUtil as ListUtil
 
 
 type alias Model =
-    { email : String
-    , password : String
+    { name : String
+    , email : String
+    , password1 : String
+    , password2 : String
     , fetchState : Maybe (FetchState User)
     }
 
 
 type Msg
-    = Email String
-    | Password String
-    | Login
+    = Name String
+    | Email String
+    | Password1 String
+    | Password2 String
+    | Signup
     | Receive (Result Http.Error User)
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model "" "" Nothing, Cmd.none )
+    ( Model "" "" "" "" Nothing, Cmd.none )
 
 
 update : Msg -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
 update msg model wrapMsg sessionCmd =
     case msg of
+        Name name ->
+            ( { model | name = name }, Cmd.none )
+
         Email email ->
             ( { model | email = email }, Cmd.none )
 
-        Password password ->
-            ( { model | password = password }, Cmd.none )
+        Password1 password1 ->
+            ( { model | password1 = password1 }, Cmd.none )
 
-        Login ->
-            ( { model | fetchState = Just Loading }, Cmd.map wrapMsg (loginCmd model) )
+        Password2 password2 ->
+            ( { model | password2 = password2 }, Cmd.none )
+
+        Signup ->
+            ( { model | fetchState = Just Loading }, Cmd.map wrapMsg (signupCmd model) )
 
         Receive (Ok user) ->
             ( model, sessionCmd (Session.Login user "/") )
@@ -57,20 +67,22 @@ update msg model wrapMsg sessionCmd =
             ( { model | fetchState = Just (Failure (Debug.toString error)) }, Cmd.none )
 
 
-cantLogin : Model -> Bool
-cantLogin model =
-    model.email == "" || model.password == "" || model.fetchState == Just Loading
+cantSignup : Model -> Bool
+cantSignup model =
+    (model.name == "" || model.email == "" || model.password1 == "")
+        || (model.password1 /= model.password2 || model.fetchState == Just Loading)
 
 
-loginCmd : Model -> Cmd Msg
-loginCmd { email, password } =
+signupCmd : Model -> Cmd Msg
+signupCmd { name, email, password1 } =
     Http.post
-        { url = Config.userApi ++ "/login"
+        { url = Config.userApi ++ "/signup"
         , body =
             Http.jsonBody
                 (Encode.object
-                    [ ( "email", Encode.string email )
-                    , ( "password", Encode.string password )
+                    [ ( "name", Encode.string name )
+                    , ( "email", Encode.string email )
+                    , ( "password", Encode.string password1 )
                     ]
                 )
         , expect = Http.expectJson Receive User.decoder
@@ -83,12 +95,12 @@ view model =
         [ Grid.row [ Row.attrs [ class "justify-content-center" ] ]
             [ Grid.col [ Col.md6 ]
                 (ListUtil.append3
-                    [ h3 [ class "mb-3" ] [ text "Please Log in" ]
+                    [ h3 [ class "mb-3" ] [ text "Please Sign up" ]
                     ]
                     (case model.fetchState of
                         Just (Failure error) ->
                             [ Alert.simpleDanger []
-                                [ text ("Login failed: " ++ error) ]
+                                [ text ("Signup failed: " ++ error) ]
                             ]
 
                         _ ->
@@ -96,21 +108,29 @@ view model =
                     )
                     [ Form.form []
                         [ Form.group []
-                            [ Form.label [] [ text "Email" ]
-                            , Input.email [ value model.email, onInput Email, Input.attrs [ autofocus True ] ]
+                            [ Form.label [] [ text "Name" ]
+                            , Input.text [ value model.name, onInput Name, Input.attrs [ autofocus True ] ]
                             ]
                         , Form.group []
-                            [ Form.label [] [ text "Password" ]
-                            , Input.password [ value model.password, onInput Password ]
+                            [ Form.label [] [ text "Email" ]
+                            , Input.email [ value model.email, onInput Email ]
                             ]
-                        , Button.button [ primary, onClick Login, disabled (cantLogin model) ]
+                        , Form.group []
+                            [ Form.label [] [ text "Password1" ]
+                            , Input.password [ value model.password1, onInput Password1 ]
+                            ]
+                        , Form.group []
+                            [ Form.label [] [ text "Password2" ]
+                            , Input.password [ value model.password2, onInput Password2 ]
+                            ]
+                        , Button.button [ primary, onClick Signup, disabled (cantSignup model) ]
                             (if model.fetchState == Just Loading then
                                 [ Spinner.spinner [ Spinner.small, Spinner.attrs [ class "mr-2" ] ] []
-                                , text "Log in"
+                                , text "Sign up"
                                 ]
 
                              else
-                                [ text "Log in" ]
+                                [ text "Sign up" ]
                             )
                         ]
                     ]
