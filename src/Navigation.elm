@@ -30,7 +30,7 @@ storeNav session navState navMsg =
         |> Navbar.items
             (List.append
                 [ Navbar.itemLink [ href "/" ] [ text "Home" ]
-                , Navbar.itemLink [ href "#" ] [ text "About" ]
+                , Navbar.itemLink [ href "/about" ] [ text "About" ]
                 ]
                 (case session.user of
                     Nothing ->

@@ -22,6 +22,7 @@ suite =
         , testParse "ProductDetail 1" "/product/1" (Just (Route.Product 1))
         , testParse "Invalid /product" "/product" Nothing
         , testParse "Invalid /product/x" "/product/x" Nothing
+        , testParse "About" "/about" (Just Route.About)
         , testParse "Login" "/login" (Just Route.Login)
         , testParse "Logout" "/logout" (Just Route.Logout)
         , testParse "Signup" "/signup" (Just Route.Signup)

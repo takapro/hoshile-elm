@@ -1,4 +1,4 @@
-module Main exposing (main)
+module App exposing (main)
 
 import Bootstrap.Navbar as Navbar
 import Browser
@@ -6,6 +6,7 @@ import Browser.Navigation as Nav
 import Config
 import Html exposing (Html, div)
 import Navigation exposing (storeFooter, storeHeader, storeNav)
+import Page.About
 import Page.NotFound
 import Page.ProductDetail
 import Page.ProductList
@@ -30,6 +31,7 @@ type Page
     = NotFound
     | ProductList Page.ProductList.Model
     | ProductDetail Page.ProductDetail.Model
+    | About
     | UserLogin Page.UserLogin.Model
     | UserSignup Page.UserSignup.Model
     | UserProfile Page.UserProfile.Model
@@ -103,7 +105,7 @@ update msg model =
         ProductListMsg pageMsg ->
             case model.page of
                 ProductList page ->
-                    updatePage model ProductList ProductListMsg <|
+                    updatePage ProductList ProductListMsg model <|
                         Page.ProductList.update pageMsg page
 
                 _ ->
@@ -112,7 +114,7 @@ update msg model =
         ProductDetailMsg pageMsg ->
             case model.page of
                 ProductDetail page ->
-                    updatePage model ProductDetail ProductDetailMsg <|
+                    updatePage ProductDetail ProductDetailMsg model <|
                         Page.ProductDetail.update pageMsg page
 
                 _ ->
@@ -121,7 +123,7 @@ update msg model =
         UserLoginMsg pageMsg ->
             case model.page of
                 UserLogin page ->
-                    updatePage model UserLogin identity <|
+                    updatePage UserLogin identity model <|
                         Page.UserLogin.update pageMsg page UserLoginMsg sessionCmd
 
                 _ ->
@@ -130,7 +132,7 @@ update msg model =
         UserSignupMsg pageMsg ->
             case model.page of
                 UserSignup page ->
-                    updatePage model UserSignup identity <|
+                    updatePage UserSignup identity model <|
                         Page.UserSignup.update pageMsg page UserSignupMsg sessionCmd
 
                 _ ->
@@ -139,7 +141,7 @@ update msg model =
         UserProfileMsg pageMsg ->
             case model.page of
                 UserProfile page ->
-                    updatePage model UserProfile identity <|
+                    updatePage UserProfile identity model <|
                         Page.UserProfile.update pageMsg page UserProfileMsg sessionCmd
 
                 _ ->
@@ -153,31 +155,34 @@ goTo route model =
             ( { model | page = NotFound }, Cmd.none )
 
         Just Route.Top ->
-            updatePage model ProductList ProductListMsg <|
+            updatePage ProductList ProductListMsg model <|
                 Page.ProductList.init
 
         Just (Route.Product id) ->
-            updatePage model ProductDetail ProductDetailMsg <|
+            updatePage ProductDetail ProductDetailMsg model <|
                 Page.ProductDetail.init id
 
+        Just Route.About ->
+            ( { model | page = About }, Cmd.none )
+
         Just Route.Login ->
-            updatePage model UserLogin UserLoginMsg <|
+            updatePage UserLogin UserLoginMsg model <|
                 Page.UserLogin.init
 
         Just Route.Logout ->
             ( model, sessionCmd (Session.Logout "/") )
 
         Just Route.Signup ->
-            updatePage model UserSignup UserSignupMsg <|
+            updatePage UserSignup UserSignupMsg model <|
                 Page.UserSignup.init
 
         Just Route.Profile ->
-            updatePage model UserProfile UserProfileMsg <|
+            updatePage UserProfile UserProfileMsg model <|
                 Page.UserProfile.init model.session.user
 
 
-updatePage : Model -> (page -> Page) -> (msg -> Msg) -> ( page, Cmd msg ) -> ( Model, Cmd Msg )
-updatePage model pageConstructor msgConstructor =
+updatePage : (page -> Page) -> (msg -> Msg) -> Model -> ( page, Cmd msg ) -> ( Model, Cmd Msg )
+updatePage pageConstructor msgConstructor model =
     Tuple.mapBoth
         (\page -> { model | page = pageConstructor page })
         (Cmd.map msgConstructor)
@@ -208,6 +213,9 @@ pageView page =
 
         ProductDetail model ->
             Html.map ProductDetailMsg (Page.ProductDetail.view model)
+
+        About ->
+            Page.About.view
 
         UserLogin model ->
             Html.map UserLoginMsg (Page.UserLogin.view model)

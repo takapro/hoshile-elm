@@ -8,7 +8,7 @@ title =
 
 apiBase : String
 apiBase =
-    "http://localhost:3000/"
+    "https://hoshile-api.herokuapp.com/"
 
 
 productApi : String
