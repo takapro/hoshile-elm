@@ -81,7 +81,7 @@ updateCart : Model -> Cmd Msg
 updateCart { user, shoppingCart } =
     case user of
         Just { token } ->
-            Fetch.putWithToken Receive Decode.bool (Config.userApi ++ "/shoppingCart") token <|
+            Fetch.putWithToken Receive Decode.bool token (Config.userApi ++ "/shoppingCart") <|
                 let
                     json =
                         Encode.encode 0 (CartEntry.encodeCart shoppingCart)

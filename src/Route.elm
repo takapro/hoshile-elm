@@ -14,6 +14,8 @@ type Route
     | Signup (Maybe String)
     | Profile
     | ShoppingCart
+    | OrderList
+    | OrderDetail Int
 
 
 parse : Url -> Maybe Route
@@ -32,4 +34,6 @@ parser =
         , map Signup (s "signup" <?> Query.string "forPurchase")
         , map Profile (s "profile")
         , map ShoppingCart (s "shoppingCart")
+        , map OrderList (s "orderList")
+        , map OrderDetail (s "order" </> int)
         ]

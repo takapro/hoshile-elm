@@ -41,8 +41,8 @@ type Msg
     | ReceivePassword (FetchState User)
 
 
-init : Maybe User -> ( Model, Cmd Msg )
-init user =
+init : Session.Model -> ( Model, Cmd Msg )
+init { user } =
     case user of
         Just { token, name, email } ->
             ( Model (Just token) name email "" "" "" Nothing Nothing, Cmd.none )
@@ -102,7 +102,7 @@ profileCmd : Model -> Cmd Msg
 profileCmd model =
     case model.token of
         Just token ->
-            Fetch.putWithToken ReceiveProfile User.decoder (Config.userApi ++ "/profile") token <|
+            Fetch.putWithToken ReceiveProfile User.decoder token (Config.userApi ++ "/profile") <|
                 Encode.object
                     [ ( "name", Encode.string model.name )
                     , ( "email", Encode.string model.email )
@@ -116,7 +116,7 @@ passwordCmd : Model -> Cmd Msg
 passwordCmd model =
     case model.token of
         Just token ->
-            Fetch.putWithToken ReceivePassword User.decoder (Config.userApi ++ "/password") token <|
+            Fetch.putWithToken ReceivePassword User.decoder token (Config.userApi ++ "/password") <|
                 Encode.object
                     [ ( "curPassword", Encode.string model.curPassword )
                     , ( "newPassword", Encode.string model.password1 )

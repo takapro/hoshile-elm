@@ -3,6 +3,7 @@ module Entity.CartEntry exposing (CartEntry, DetailEntry, decoder, encodeCart, j
 import Entity.Product exposing (Product)
 import Json.Decode exposing (Decoder, field, int, map2)
 import Json.Encode as Encode exposing (Value)
+import Util.JsonUtil exposing (stringToInt)
 
 
 type alias CartEntry =
@@ -20,8 +21,8 @@ type alias DetailEntry =
 decoder : Decoder CartEntry
 decoder =
     map2 CartEntry
-        (field "productId" int)
-        (field "quantity" int)
+        (field "productId" stringToInt)
+        (field "quantity" stringToInt)
 
 
 encodeCart : List CartEntry -> Value

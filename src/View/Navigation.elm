@@ -33,7 +33,7 @@ view session navState navMsg =
                             , toggle = Navbar.dropdownToggle [] [ text user.name ]
                             , items =
                                 [ Navbar.dropdownItem [ href "/profile" ] [ text "Profile" ]
-                                , Navbar.dropdownItem [ href "#" ] [ text "Order History" ]
+                                , Navbar.dropdownItem [ href "/orderList" ] [ text "Order History" ]
                                 , Navbar.dropdownDivider
                                 , Navbar.dropdownItem [ href "/logout" ] [ text "Log out" ]
                                 ]

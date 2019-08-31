@@ -32,5 +32,7 @@ suite =
         , testParse "Signup forPurchaseX=false" "/signup?forPurchaseX=false" (Just (Route.Signup Nothing))
         , testParse "Profile" "/profile" (Just Route.Profile)
         , testParse "ShoppingCart" "/shoppingCart" (Just Route.ShoppingCart)
+        , testParse "OrderList" "/orderList" (Just Route.OrderList)
+        , testParse "OrderDetail" "/order/1" (Just (Route.OrderDetail 1))
         , testParse "Invalid /zzz" "/zzz" Nothing
         ]

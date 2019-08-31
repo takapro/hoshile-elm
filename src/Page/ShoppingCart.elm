@@ -70,7 +70,7 @@ cantPurchase { shoppingCart } { token } =
 
 purchaseCmd : String -> List CartEntry -> Cmd Msg
 purchaseCmd token shoppingCart =
-    Fetch.postWithToken ReceivePurchase Decode.int Config.orderApi token <|
+    Fetch.postWithToken ReceivePurchase Decode.int token Config.orderApi <|
         CartEntry.encodeCart shoppingCart
 
 

@@ -7,6 +7,8 @@ import Config
 import Html exposing (Html, div)
 import Page.About
 import Page.NotFound
+import Page.OrderDetail
+import Page.OrderList
 import Page.ProductDetail
 import Page.ProductList
 import Page.ShoppingCart
@@ -39,6 +41,8 @@ type Page
     | UserSignup Page.UserSignup.Model
     | UserProfile Page.UserProfile.Model
     | ShoppingCart Page.ShoppingCart.Model
+    | OrderList Page.OrderList.Model
+    | OrderDetail Page.OrderDetail.Model
 
 
 type Msg
@@ -52,6 +56,8 @@ type Msg
     | UserSignupMsg Page.UserSignup.Msg
     | UserProfileMsg Page.UserProfile.Msg
     | ShoppingCartMsg Page.ShoppingCart.Msg
+    | OrderListMsg Page.OrderList.Msg
+    | OrderDetailMsg Page.OrderDetail.Msg
 
 
 main : Program () Model Msg
@@ -162,6 +168,24 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        OrderListMsg pageMsg ->
+            case model.page of
+                OrderList page ->
+                    Page.OrderList.update pageMsg model.key page
+                        |> mapPage model OrderList OrderListMsg
+
+                _ ->
+                    ( model, Cmd.none )
+
+        OrderDetailMsg pageMsg ->
+            case model.page of
+                OrderDetail page ->
+                    Page.OrderDetail.update pageMsg page
+                        |> mapPage model OrderDetail OrderDetailMsg
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 goTo : Maybe Route -> Model -> ( Model, Cmd Msg )
 goTo route model =
@@ -192,12 +216,20 @@ goTo route model =
                 |> mapPage model UserSignup UserSignupMsg
 
         Just Route.Profile ->
-            Page.UserProfile.init model.session.user
+            Page.UserProfile.init model.session
                 |> mapPage model UserProfile UserProfileMsg
 
         Just Route.ShoppingCart ->
             Page.ShoppingCart.init model.session
                 |> mapPage model ShoppingCart ShoppingCartMsg
+
+        Just Route.OrderList ->
+            Page.OrderList.init model.session
+                |> mapPage model OrderList OrderListMsg
+
+        Just (Route.OrderDetail id) ->
+            Page.OrderDetail.init model.session id
+                |> mapPage model OrderDetail OrderDetailMsg
 
 
 mapPage : Model -> (page -> Page) -> (msg -> Msg) -> ( page, Cmd msg ) -> ( Model, Cmd Msg )
@@ -247,3 +279,9 @@ pageView { session, page } =
 
         ShoppingCart model ->
             Html.map ShoppingCartMsg (Page.ShoppingCart.view session model)
+
+        OrderList model ->
+            Html.map OrderListMsg (Page.OrderList.view model)
+
+        OrderDetail model ->
+            Html.map OrderDetailMsg (Page.OrderDetail.view model)

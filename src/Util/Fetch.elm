@@ -29,22 +29,22 @@ post msg decoder url value =
 
 
 getWithToken : (FetchState a -> msg) -> Decoder a -> String -> String -> Cmd msg
-getWithToken msg decoder url token =
-    request "GET" msg decoder url token Http.emptyBody
+getWithToken msg decoder token url =
+    request "GET" msg decoder token url Http.emptyBody
 
 
 postWithToken : (FetchState a -> msg) -> Decoder a -> String -> String -> Value -> Cmd msg
-postWithToken msg decoder url token value =
-    request "POST" msg decoder url token (Http.jsonBody value)
+postWithToken msg decoder token url value =
+    request "POST" msg decoder token url (Http.jsonBody value)
 
 
 putWithToken : (FetchState a -> msg) -> Decoder a -> String -> String -> Value -> Cmd msg
-putWithToken msg decoder url token value =
-    request "PUT" msg decoder url token (Http.jsonBody value)
+putWithToken msg decoder token url value =
+    request "PUT" msg decoder token url (Http.jsonBody value)
 
 
 request : String -> (FetchState a -> msg) -> Decoder a -> String -> String -> Http.Body -> Cmd msg
-request method msg decoder url token body =
+request method msg decoder token url body =
     Http.request
         { method = method
         , headers =
