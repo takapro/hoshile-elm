@@ -1,7 +1,8 @@
-module Entity.CartEntry exposing (CartEntry, DetailEntry, decoder, joinProducts, mergeCart, totalPrice)
+module Entity.CartEntry exposing (CartEntry, DetailEntry, decoder, encodeCart, joinProducts, mergeCart, totalPrice)
 
 import Entity.Product exposing (Product)
 import Json.Decode exposing (Decoder, field, int, map2)
+import Json.Encode as Encode exposing (Value)
 
 
 type alias CartEntry =
@@ -21,6 +22,18 @@ decoder =
     map2 CartEntry
         (field "productId" int)
         (field "quantity" int)
+
+
+encodeCart : List CartEntry -> Value
+encodeCart cart =
+    cart
+        |> Encode.list
+            (\entry ->
+                Encode.object
+                    [ ( "productId", Encode.int entry.productId )
+                    , ( "quantity", Encode.int entry.quantity )
+                    ]
+            )
 
 
 mergeCart : List CartEntry -> List CartEntry -> List CartEntry

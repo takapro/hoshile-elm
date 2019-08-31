@@ -42,10 +42,10 @@ type Msg
 
 
 init : Maybe User -> ( Model, Cmd Msg )
-init maybeUser =
-    case maybeUser of
-        Just user ->
-            ( Model (Just user.token) user.name user.email "" "" "" Nothing Nothing, Cmd.none )
+init user =
+    case user of
+        Just { token, name, email } ->
+            ( Model (Just token) name email "" "" "" Nothing Nothing, Cmd.none )
 
         Nothing ->
             ( Model Nothing "" "" "" "" "" Nothing Nothing, Cmd.none )
@@ -89,14 +89,13 @@ update msg model wrapMsg sessionCmd =
 
 
 cantUpdateProfile : Model -> Bool
-cantUpdateProfile model =
-    model.name == "" || model.email == "" || model.profileState == Just Loading
+cantUpdateProfile { name, email, profileState } =
+    name == "" || email == "" || profileState == Just Loading
 
 
 cantUpdatePassword : Model -> Bool
-cantUpdatePassword model =
-    (model.curPassword == "" || model.password1 == "")
-        || (model.password1 /= model.password2 || model.passwordState == Just Loading)
+cantUpdatePassword { curPassword, password1, password2, passwordState } =
+    curPassword == "" || password1 == "" || password1 /= password2 || passwordState == Just Loading
 
 
 profileCmd : Model -> Cmd Msg
@@ -162,7 +161,7 @@ profileView model =
                 , Input.email [ value model.email, onInput Email ]
                 ]
             , Button.button [ primary, onClick UpdateProfile, disabled (cantUpdateProfile model) ]
-                (CustomAlert.spinnerLabel "Update Profile" model.profileState)
+                (CustomAlert.spinnerLabel model.profileState "Update Profile")
             ]
         ]
 
@@ -187,6 +186,6 @@ passwordView model =
                 , Input.password [ value model.password2, onInput Password2 ]
                 ]
             , Button.button [ primary, onClick UpdatePassword, disabled (cantUpdatePassword model) ]
-                (CustomAlert.spinnerLabel "Update Password" model.passwordState)
+                (CustomAlert.spinnerLabel model.passwordState "Update Password")
             ]
         ]

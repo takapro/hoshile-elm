@@ -1,4 +1,4 @@
-module Config exposing (productApi, title, userApi)
+module Config exposing (orderApi, productApi, title, userApi)
 
 
 title : String
@@ -19,3 +19,8 @@ productApi =
 userApi : String
 userApi =
     apiBase ++ "user"
+
+
+orderApi : String
+orderApi =
+    apiBase ++ "orders"

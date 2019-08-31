@@ -9,7 +9,7 @@ import Config
 import Entity.Product as Product exposing (Product)
 import Html exposing (Html, div, h4, h6, text)
 import Html.Attributes exposing (class, href, src)
-import Json.Decode exposing (list)
+import Json.Decode as Decode
 import Util.Fetch as Fetch exposing (FetchState(..))
 import View.CustomAlert as CustomAlert
 
@@ -25,7 +25,7 @@ type Msg
 init : ( Model, Cmd Msg )
 init =
     ( Loading
-    , Fetch.get Receive (list Product.decoder) Config.productApi
+    , Fetch.get Receive (Decode.list Product.decoder) Config.productApi
     )
 
 

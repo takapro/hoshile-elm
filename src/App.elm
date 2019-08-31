@@ -85,7 +85,8 @@ subscriptions model =
 
 sessionCmd : Session.Msg -> Cmd Msg
 sessionCmd msg =
-    Task.perform identity <| Task.succeed (SessionMsg msg)
+    Task.succeed (SessionMsg msg)
+        |> Task.perform identity
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -101,8 +102,8 @@ update msg model =
             ( model, Nav.load href )
 
         SessionMsg sessionMsg ->
-            Tuple.mapFirst (\session -> { model | session = session }) <|
-                Session.update sessionMsg model.key model.session
+            Session.update sessionMsg model.key model.session SessionMsg sessionCmd
+                |> Tuple.mapFirst (\session -> { model | session = session })
 
         NavMsg state ->
             ( { model | navState = state }, Cmd.none )
@@ -155,7 +156,7 @@ update msg model =
         ShoppingCartMsg pageMsg ->
             case model.page of
                 ShoppingCart page ->
-                    Page.ShoppingCart.update pageMsg page ShoppingCartMsg sessionCmd
+                    Page.ShoppingCart.update model.key pageMsg page ShoppingCartMsg sessionCmd
                         |> mapPage model ShoppingCart identity
 
                 _ ->
@@ -195,7 +196,7 @@ goTo route model =
                 |> mapPage model UserProfile UserProfileMsg
 
         Just Route.ShoppingCart ->
-            Page.ShoppingCart.init model.session.shoppingCart
+            Page.ShoppingCart.init model.session
                 |> mapPage model ShoppingCart ShoppingCartMsg
 
 

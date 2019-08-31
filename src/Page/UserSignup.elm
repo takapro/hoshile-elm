@@ -66,9 +66,8 @@ update msg model wrapMsg sessionCmd =
 
 
 cantSignup : Model -> Bool
-cantSignup model =
-    (model.name == "" || model.email == "" || model.password1 == "")
-        || (model.password1 /= model.password2 || model.signupState == Just Loading)
+cantSignup { name, email, password1, password2, signupState } =
+    name == "" || email == "" || password1 == "" || password1 /= password2 || signupState == Just Loading
 
 
 signupCmd : Model -> Cmd Msg
@@ -108,7 +107,7 @@ view model =
                             , Input.password [ value model.password2, onInput Password2 ]
                             ]
                         , Button.button [ primary, onClick Signup, disabled (cantSignup model) ]
-                            (CustomAlert.spinnerLabel "Sign up" model.signupState)
+                            (CustomAlert.spinnerLabel model.signupState "Sign up")
                         ]
                     ]
                 )

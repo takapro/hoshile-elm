@@ -53,8 +53,8 @@ maybeFetchState message action maybeState success =
             fetchState action state success
 
 
-spinnerLabel : String -> Maybe (FetchState t) -> List (Html msg)
-spinnerLabel label maybeState =
+spinnerLabel : Maybe (FetchState t) -> String -> List (Html msg)
+spinnerLabel maybeState label =
     case maybeState of
         Just Loading ->
             [ Spinner.spinner [ Spinner.small, Spinner.attrs [ class "mr-2" ] ] []

@@ -56,8 +56,8 @@ update msg model wrapMsg sessionCmd =
 
 
 cantLogin : Model -> Bool
-cantLogin model =
-    model.email == "" || model.password == "" || model.loginState == Just Loading
+cantLogin { email, password, loginState } =
+    email == "" || password == "" || loginState == Just Loading
 
 
 loginCmd : Model -> Cmd Msg
@@ -88,7 +88,7 @@ view model =
                             , Input.password [ value model.password, onInput Password ]
                             ]
                         , Button.button [ primary, onClick Login, disabled (cantLogin model) ]
-                            (CustomAlert.spinnerLabel "Log in" model.loginState)
+                            (CustomAlert.spinnerLabel model.loginState "Log in")
                         ]
                     ]
                 )

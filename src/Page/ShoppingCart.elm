@@ -1,65 +1,109 @@
 module Page.ShoppingCart exposing (Model, Msg, init, update, view)
 
-import Bootstrap.Button as Button exposing (light, onClick, primary, small)
+import Bootstrap.Button as Button exposing (attrs, disabled, large, light, onClick, primary, small)
 import Bootstrap.Grid as Grid
 import Bootstrap.Table as Table exposing (cellAttr)
+import Browser.Navigation as Nav
 import Config
 import Entity.CartEntry as CartEntry exposing (CartEntry, DetailEntry)
 import Entity.Product as Product exposing (Product)
 import Html exposing (Html, div, h3, img, span, text)
 import Html.Attributes exposing (class, colspan, src)
-import Json.Decode exposing (list)
+import Json.Decode as Decode
 import Session
 import Util.Fetch as Fetch exposing (FetchState(..))
+import Util.ListUtil as ListUtil
 import View.CustomAlert as CustomAlert
 
 
 type alias Model =
-    { cart : List CartEntry
+    { token : Maybe String
+    , shoppingCart : List CartEntry
     , fetchState : FetchState (List Product)
+    , purchaseState : Maybe (FetchState Int)
     }
 
 
 type Msg
     = Receive (FetchState (List Product))
     | Quantity Int Int
+    | Purchase
+    | ReceivePurchase (FetchState Int)
 
 
-init : List CartEntry -> ( Model, Cmd Msg )
-init cart =
-    ( Model cart Loading
-    , Fetch.get Receive (list Product.decoder) Config.productApi
+init : Session.Model -> ( Model, Cmd Msg )
+init { user, shoppingCart } =
+    ( Model (Maybe.map .token user) shoppingCart Loading Nothing
+    , Fetch.get Receive (Decode.list Product.decoder) Config.productApi
     )
 
 
-update : Msg -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
-update msg model _ sessionCmd =
+update : Nav.Key -> Msg -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
+update key msg model wrapMsg sessionCmd =
     case msg of
         Receive fetchState ->
             ( { model | fetchState = fetchState }, Cmd.none )
 
         Quantity id delta ->
-            ( { model | cart = CartEntry.mergeCart model.cart [ CartEntry id delta ] }
+            ( { model | shoppingCart = CartEntry.mergeCart model.shoppingCart [ CartEntry id delta ] }
             , sessionCmd (Session.MergeCart [ CartEntry id delta ] Nothing)
             )
+
+        Purchase ->
+            case model.token of
+                Just token ->
+                    ( { model | purchaseState = Just Loading }
+                    , Cmd.map wrapMsg (purchaseCmd token model.shoppingCart)
+                    )
+
+                Nothing ->
+                    ( model, Nav.pushUrl key "/login?forPurchase=true" )
+
+        ReceivePurchase (Success orderId) ->
+            ( model, Nav.pushUrl key ("/orders/" ++ String.fromInt orderId) )
+
+        ReceivePurchase purchaseState ->
+            ( { model | purchaseState = Just purchaseState }, Cmd.none )
+
+
+cantPurchase : Model -> Bool
+cantPurchase { token, shoppingCart } =
+    token /= Nothing && shoppingCart == []
+
+
+purchaseCmd : String -> List CartEntry -> Cmd Msg
+purchaseCmd token shoppingCart =
+    Fetch.postWithToken ReceivePurchase Decode.int Config.orderApi token <|
+        CartEntry.encodeCart shoppingCart
 
 
 view : Model -> Html Msg
 view model =
     Grid.container [ class "py-4" ]
         (CustomAlert.fetchState "Fetch" model.fetchState <|
-            \products -> shoppingCart model (CartEntry.joinProducts model.cart products)
+            \products -> cartView model (CartEntry.joinProducts model.shoppingCart products)
         )
 
 
-shoppingCart : Model -> List DetailEntry -> List (Html Msg)
-shoppingCart model entries =
-    [ h3 [ class "mb-3" ] [ text "Shopping Cart" ]
-    , cartTable entries
-    , div [ class "text-center" ]
-        [ Button.button [ primary ] [ text "Purchase" ]
+cartView : Model -> List DetailEntry -> List (Html Msg)
+cartView model entries =
+    ListUtil.append3
+        [ h3 [ class "mb-3" ] [ text "Shopping Cart" ]
         ]
-    ]
+        (CustomAlert.errorIfFailure "Purchase" model.purchaseState)
+        [ cartTable entries
+        , div [ class "text-center" ]
+            [ Button.button
+                [ primary, large, attrs [ class "w-25" ], onClick Purchase, disabled (cantPurchase model) ]
+                (CustomAlert.spinnerLabel model.purchaseState <|
+                    if model.token /= Nothing then
+                        "Purchase"
+
+                    else
+                        "Please Log in"
+                )
+            ]
+        ]
 
 
 cartTable : List DetailEntry -> Html Msg
