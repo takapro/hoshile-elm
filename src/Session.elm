@@ -3,7 +3,7 @@ module Session exposing (Model, Msg(..), init, update)
 import Browser.Navigation as Nav
 import Config
 import Entity.CartEntry as CartEntry exposing (CartEntry)
-import Entity.User as User exposing (User)
+import Entity.User exposing (User)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Util.Fetch as Fetch exposing (FetchState(..))
@@ -21,7 +21,7 @@ type Msg
     | Update User
     | MergeCart (List CartEntry) (Maybe String)
     | UpdateCart
-    | Receive (FetchState User)
+    | Receive (FetchState Bool)
 
 
 init : Model
@@ -81,7 +81,7 @@ updateCart : Model -> Cmd Msg
 updateCart { user, shoppingCart } =
     case user of
         Just { token } ->
-            Fetch.putWithToken Receive User.decoder (Config.userApi ++ "/shoppingCart") token <|
+            Fetch.putWithToken Receive Decode.bool (Config.userApi ++ "/shoppingCart") token <|
                 let
                     json =
                         Encode.encode 0 (CartEntry.encodeCart shoppingCart)

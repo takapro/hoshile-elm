@@ -156,7 +156,7 @@ update msg model =
         ShoppingCartMsg pageMsg ->
             case model.page of
                 ShoppingCart page ->
-                    Page.ShoppingCart.update model.key pageMsg page ShoppingCartMsg sessionCmd
+                    Page.ShoppingCart.update pageMsg model.key model.session page ShoppingCartMsg sessionCmd
                         |> mapPage model ShoppingCart identity
 
                 _ ->
@@ -180,15 +180,15 @@ goTo route model =
         Just Route.About ->
             ( { model | page = About }, Cmd.none )
 
-        Just Route.Login ->
-            Page.UserLogin.init
+        Just (Route.Login forPurchase) ->
+            Page.UserLogin.init forPurchase
                 |> mapPage model UserLogin UserLoginMsg
 
         Just Route.Logout ->
             ( model, sessionCmd (Session.Logout "/") )
 
-        Just Route.Signup ->
-            Page.UserSignup.init
+        Just (Route.Signup forPurchase) ->
+            Page.UserSignup.init forPurchase
                 |> mapPage model UserSignup UserSignupMsg
 
         Just Route.Profile ->
@@ -214,15 +214,15 @@ view model =
         [ div []
             [ Header.view
             , Navigation.view model.session model.navState NavMsg
-            , pageView model.page
+            , pageView model
             , Footer.view
             ]
         ]
     }
 
 
-pageView : Page -> Html Msg
-pageView page =
+pageView : Model -> Html Msg
+pageView { session, page } =
     case page of
         NotFound ->
             Page.NotFound.view
@@ -246,4 +246,4 @@ pageView page =
             Html.map UserProfileMsg (Page.UserProfile.view model)
 
         ShoppingCart model ->
-            Html.map ShoppingCartMsg (Page.ShoppingCart.view model)
+            Html.map ShoppingCartMsg (Page.ShoppingCart.view session model)

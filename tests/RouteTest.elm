@@ -23,9 +23,13 @@ suite =
         , testParse "Invalid /product" "/product" Nothing
         , testParse "Invalid /product/x" "/product/x" Nothing
         , testParse "About" "/about" (Just Route.About)
-        , testParse "Login" "/login" (Just Route.Login)
+        , testParse "Login Nothing" "/login" (Just (Route.Login Nothing))
+        , testParse "Login forPurchase=true" "/login?forPurchase=true" (Just (Route.Login (Just "true")))
+        , testParse "Login forPurchaseX=false" "/login?forPurchaseX=false" (Just (Route.Login Nothing))
         , testParse "Logout" "/logout" (Just Route.Logout)
-        , testParse "Signup" "/signup" (Just Route.Signup)
+        , testParse "Signup Nothing" "/signup" (Just (Route.Signup Nothing))
+        , testParse "Signup forPurchase=true" "/signup?forPurchase=true" (Just (Route.Signup (Just "true")))
+        , testParse "Signup forPurchaseX=false" "/signup?forPurchaseX=false" (Just (Route.Signup Nothing))
         , testParse "Profile" "/profile" (Just Route.Profile)
         , testParse "ShoppingCart" "/shoppingCart" (Just Route.ShoppingCart)
         , testParse "Invalid /zzz" "/zzz" Nothing

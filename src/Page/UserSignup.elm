@@ -8,8 +8,8 @@ import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 import Config
 import Entity.User as User exposing (User)
-import Html exposing (Html, h3, text)
-import Html.Attributes exposing (autofocus, class)
+import Html exposing (Html, a, h3, text)
+import Html.Attributes exposing (autofocus, class, href)
 import Json.Encode as Encode
 import Session
 import Util.Fetch as Fetch exposing (FetchState(..))
@@ -18,7 +18,8 @@ import View.CustomAlert as CustomAlert
 
 
 type alias Model =
-    { name : String
+    { forPurchase : Bool
+    , name : String
     , email : String
     , password1 : String
     , password2 : String
@@ -35,9 +36,9 @@ type Msg
     | Receive (FetchState User)
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( Model "" "" "" "" Nothing, Cmd.none )
+init : Maybe String -> ( Model, Cmd Msg )
+init forPurchase =
+    ( Model (forPurchase == Just "true") "" "" "" "" Nothing, Cmd.none )
 
 
 update : Msg -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
@@ -59,10 +60,19 @@ update msg model wrapMsg sessionCmd =
             ( { model | signupState = Just Loading }, Cmd.map wrapMsg (signupCmd model) )
 
         Receive (Success user) ->
-            ( model, sessionCmd (Session.Login user "/") )
+            ( model, sessionCmd (Session.Login user (linkPath model "/" "/shoppingCart")) )
 
         Receive fetchState ->
             ( { model | signupState = Just fetchState }, Cmd.none )
+
+
+linkPath : Model -> String -> String -> String
+linkPath { forPurchase } path1 path2 =
+    if forPurchase then
+        path2
+
+    else
+        path1
 
 
 cantSignup : Model -> Bool
@@ -86,7 +96,10 @@ view model =
         [ Grid.row [ Row.attrs [ class "justify-content-center" ] ]
             [ Grid.col [ Col.md6 ]
                 (ListUtil.append3
-                    [ h3 [ class "mb-3" ] [ text "Please Sign up" ]
+                    [ h3 [ class "mb-3" ]
+                        [ text "Please Sign up, or "
+                        , a [ href (linkPath model "/login" "/login?forPurchase=true") ] [ text "Log in" ]
+                        ]
                     ]
                     (CustomAlert.errorIfFailure "Signup" model.signupState)
                     [ Form.form []

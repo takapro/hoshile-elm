@@ -18,7 +18,6 @@ import View.CustomAlert as CustomAlert
 
 type alias Model =
     { token : Maybe String
-    , shoppingCart : List CartEntry
     , fetchState : FetchState (List Product)
     , purchaseState : Maybe (FetchState Int)
     }
@@ -32,28 +31,26 @@ type Msg
 
 
 init : Session.Model -> ( Model, Cmd Msg )
-init { user, shoppingCart } =
-    ( Model (Maybe.map .token user) shoppingCart Loading Nothing
+init { user } =
+    ( Model (Maybe.map .token user) Loading Nothing
     , Fetch.get Receive (Decode.list Product.decoder) Config.productApi
     )
 
 
-update : Nav.Key -> Msg -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
-update key msg model wrapMsg sessionCmd =
+update : Msg -> Nav.Key -> Session.Model -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
+update msg key { shoppingCart } model wrapMsg sessionCmd =
     case msg of
         Receive fetchState ->
             ( { model | fetchState = fetchState }, Cmd.none )
 
         Quantity id delta ->
-            ( { model | shoppingCart = CartEntry.mergeCart model.shoppingCart [ CartEntry id delta ] }
-            , sessionCmd (Session.MergeCart [ CartEntry id delta ] Nothing)
-            )
+            ( model, sessionCmd (Session.MergeCart [ CartEntry id delta ] Nothing) )
 
         Purchase ->
             case model.token of
                 Just token ->
                     ( { model | purchaseState = Just Loading }
-                    , Cmd.map wrapMsg (purchaseCmd token model.shoppingCart)
+                    , Cmd.map wrapMsg (purchaseCmd token shoppingCart)
                     )
 
                 Nothing ->
@@ -66,8 +63,8 @@ update key msg model wrapMsg sessionCmd =
             ( { model | purchaseState = Just purchaseState }, Cmd.none )
 
 
-cantPurchase : Model -> Bool
-cantPurchase { token, shoppingCart } =
+cantPurchase : Session.Model -> Model -> Bool
+cantPurchase { shoppingCart } { token } =
     token /= Nothing && shoppingCart == []
 
 
@@ -77,16 +74,16 @@ purchaseCmd token shoppingCart =
         CartEntry.encodeCart shoppingCart
 
 
-view : Model -> Html Msg
-view model =
+view : Session.Model -> Model -> Html Msg
+view session model =
     Grid.container [ class "py-4" ]
         (CustomAlert.fetchState "Fetch" model.fetchState <|
-            \products -> cartView model (CartEntry.joinProducts model.shoppingCart products)
+            \products -> cartView session model (CartEntry.joinProducts session.shoppingCart products)
         )
 
 
-cartView : Model -> List DetailEntry -> List (Html Msg)
-cartView model entries =
+cartView : Session.Model -> Model -> List DetailEntry -> List (Html Msg)
+cartView session model entries =
     ListUtil.append3
         [ h3 [ class "mb-3" ] [ text "Shopping Cart" ]
         ]
@@ -94,7 +91,7 @@ cartView model entries =
         [ cartTable entries
         , div [ class "text-center" ]
             [ Button.button
-                [ primary, large, attrs [ class "w-25" ], onClick Purchase, disabled (cantPurchase model) ]
+                [ primary, large, attrs [ class "w-25" ], onClick Purchase, disabled (cantPurchase session model) ]
                 (CustomAlert.spinnerLabel model.purchaseState <|
                     if model.token /= Nothing then
                         "Purchase"

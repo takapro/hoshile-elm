@@ -1,16 +1,17 @@
 module Route exposing (Route(..), parse)
 
 import Url exposing (Url)
-import Url.Parser exposing ((</>), Parser, int, map, oneOf, s, top)
+import Url.Parser exposing ((</>), (<?>), Parser, int, map, oneOf, s, top)
+import Url.Parser.Query as Query
 
 
 type Route
     = Top
     | Product Int
     | About
-    | Login
+    | Login (Maybe String)
     | Logout
-    | Signup
+    | Signup (Maybe String)
     | Profile
     | ShoppingCart
 
@@ -26,9 +27,9 @@ parser =
         [ map Top top
         , map Product (s "product" </> int)
         , map About (s "about")
-        , map Login (s "login")
+        , map Login (s "login" <?> Query.string "forPurchase")
         , map Logout (s "logout")
-        , map Signup (s "signup")
+        , map Signup (s "signup" <?> Query.string "forPurchase")
         , map Profile (s "profile")
         , map ShoppingCart (s "shoppingCart")
         ]
