@@ -44,9 +44,16 @@ view session navState navMsg =
         |> Navbar.customItems
             [ Navbar.formItem []
                 [ Button.linkButton
-                    [ Button.warning
-                    , Button.attrs [ href "/shoppingCart" ]
-                    ]
+                    (if session.shoppingCart /= [] then
+                        [ Button.warning
+                        , Button.attrs [ href "/shoppingCart" ]
+                        ]
+
+                     else
+                        [ Button.secondary
+                        , Button.attrs [ href "/shoppingCart", class "text-white-50" ]
+                        ]
+                    )
                     [ text "Cart" ]
                 ]
             ]

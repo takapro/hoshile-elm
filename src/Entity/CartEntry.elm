@@ -1,4 +1,4 @@
-module Entity.CartEntry exposing (CartEntry, DetailEntry, decoder, detailEntries, totalPrice)
+module Entity.CartEntry exposing (CartEntry, DetailEntry, decoder, joinProducts, mergeCart, totalPrice)
 
 import Entity.Product exposing (Product)
 import Json.Decode exposing (Decoder, field, int, map2)
@@ -23,9 +23,29 @@ decoder =
         (field "quantity" int)
 
 
-detailEntries : List CartEntry -> List Product -> List DetailEntry
-detailEntries entries products =
-    entries
+mergeCart : List CartEntry -> List CartEntry -> List CartEntry
+mergeCart cart1 cart2 =
+    List.foldl mergeEntry cart1 cart2
+        |> List.filter (\entry -> entry.quantity > 0)
+
+
+mergeEntry : CartEntry -> List CartEntry -> List CartEntry
+mergeEntry entry cart =
+    case cart of
+        [] ->
+            [ entry ]
+
+        head :: rest ->
+            if head.productId == entry.productId then
+                { head | quantity = head.quantity + entry.quantity } :: rest
+
+            else
+                head :: mergeEntry entry rest
+
+
+joinProducts : List CartEntry -> List Product -> List DetailEntry
+joinProducts cart products =
+    cart
         |> List.map
             (\entry ->
                 products

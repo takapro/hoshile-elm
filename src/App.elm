@@ -110,8 +110,8 @@ update msg model =
         ProductListMsg pageMsg ->
             case model.page of
                 ProductList page ->
-                    updatePage ProductList ProductListMsg model <|
-                        Page.ProductList.update pageMsg page
+                    Page.ProductList.update pageMsg page
+                        |> mapPage model ProductList ProductListMsg
 
                 _ ->
                     ( model, Cmd.none )
@@ -119,8 +119,8 @@ update msg model =
         ProductDetailMsg pageMsg ->
             case model.page of
                 ProductDetail page ->
-                    updatePage ProductDetail ProductDetailMsg model <|
-                        Page.ProductDetail.update pageMsg page
+                    Page.ProductDetail.update pageMsg page ProductDetailMsg sessionCmd
+                        |> mapPage model ProductDetail identity
 
                 _ ->
                     ( model, Cmd.none )
@@ -128,8 +128,8 @@ update msg model =
         UserLoginMsg pageMsg ->
             case model.page of
                 UserLogin page ->
-                    updatePage UserLogin identity model <|
-                        Page.UserLogin.update pageMsg page UserLoginMsg sessionCmd
+                    Page.UserLogin.update pageMsg page UserLoginMsg sessionCmd
+                        |> mapPage model UserLogin identity
 
                 _ ->
                     ( model, Cmd.none )
@@ -137,8 +137,8 @@ update msg model =
         UserSignupMsg pageMsg ->
             case model.page of
                 UserSignup page ->
-                    updatePage UserSignup identity model <|
-                        Page.UserSignup.update pageMsg page UserSignupMsg sessionCmd
+                    Page.UserSignup.update pageMsg page UserSignupMsg sessionCmd
+                        |> mapPage model UserSignup identity
 
                 _ ->
                     ( model, Cmd.none )
@@ -146,8 +146,8 @@ update msg model =
         UserProfileMsg pageMsg ->
             case model.page of
                 UserProfile page ->
-                    updatePage UserProfile identity model <|
-                        Page.UserProfile.update pageMsg page UserProfileMsg sessionCmd
+                    Page.UserProfile.update pageMsg page UserProfileMsg sessionCmd
+                        |> mapPage model UserProfile identity
 
                 _ ->
                     ( model, Cmd.none )
@@ -155,8 +155,8 @@ update msg model =
         ShoppingCartMsg pageMsg ->
             case model.page of
                 ShoppingCart page ->
-                    updatePage ShoppingCart ShoppingCartMsg model <|
-                        Page.ShoppingCart.update pageMsg page
+                    Page.ShoppingCart.update pageMsg page ShoppingCartMsg sessionCmd
+                        |> mapPage model ShoppingCart identity
 
                 _ ->
                     ( model, Cmd.none )
@@ -169,38 +169,38 @@ goTo route model =
             ( { model | page = NotFound }, Cmd.none )
 
         Just Route.Top ->
-            updatePage ProductList ProductListMsg model <|
-                Page.ProductList.init
+            Page.ProductList.init
+                |> mapPage model ProductList ProductListMsg
 
         Just (Route.Product id) ->
-            updatePage ProductDetail ProductDetailMsg model <|
-                Page.ProductDetail.init id
+            Page.ProductDetail.init id
+                |> mapPage model ProductDetail ProductDetailMsg
 
         Just Route.About ->
             ( { model | page = About }, Cmd.none )
 
         Just Route.Login ->
-            updatePage UserLogin UserLoginMsg model <|
-                Page.UserLogin.init
+            Page.UserLogin.init
+                |> mapPage model UserLogin UserLoginMsg
 
         Just Route.Logout ->
             ( model, sessionCmd (Session.Logout "/") )
 
         Just Route.Signup ->
-            updatePage UserSignup UserSignupMsg model <|
-                Page.UserSignup.init
+            Page.UserSignup.init
+                |> mapPage model UserSignup UserSignupMsg
 
         Just Route.Profile ->
-            updatePage UserProfile UserProfileMsg model <|
-                Page.UserProfile.init model.session.user
+            Page.UserProfile.init model.session.user
+                |> mapPage model UserProfile UserProfileMsg
 
         Just Route.ShoppingCart ->
-            updatePage ShoppingCart ShoppingCartMsg model <|
-                Page.ShoppingCart.init model.session.shoppingCart
+            Page.ShoppingCart.init model.session.shoppingCart
+                |> mapPage model ShoppingCart ShoppingCartMsg
 
 
-updatePage : (page -> Page) -> (msg -> Msg) -> Model -> ( page, Cmd msg ) -> ( Model, Cmd Msg )
-updatePage pageConstructor msgConstructor model =
+mapPage : Model -> (page -> Page) -> (msg -> Msg) -> ( page, Cmd msg ) -> ( Model, Cmd Msg )
+mapPage model pageConstructor msgConstructor =
     Tuple.mapBoth
         (\page -> { model | page = pageConstructor page })
         (Cmd.map msgConstructor)

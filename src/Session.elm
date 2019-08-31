@@ -1,7 +1,7 @@
 module Session exposing (Model, Msg(..), init, update)
 
 import Browser.Navigation as Nav
-import Entity.CartEntry exposing (CartEntry)
+import Entity.CartEntry as CartEntry exposing (CartEntry)
 import Entity.User exposing (User)
 
 
@@ -15,6 +15,8 @@ type Msg
     = Login User String
     | Logout String
     | Update User
+    | MergeCart (List CartEntry) (Maybe String)
+    | ClearCart
 
 
 init : Model
@@ -33,3 +35,21 @@ update msg key model =
 
         Update user ->
             ( { model | user = Just user }, Cmd.none )
+
+        MergeCart cart maybePath ->
+            ( { model | shoppingCart = CartEntry.mergeCart model.shoppingCart cart }
+            , pushCmd key maybePath
+            )
+
+        ClearCart ->
+            ( { model | shoppingCart = [] }, Cmd.none )
+
+
+pushCmd : Nav.Key -> Maybe String -> Cmd msg
+pushCmd key maybePath =
+    case maybePath of
+        Just path ->
+            Nav.pushUrl key path
+
+        _ ->
+            Cmd.none

@@ -1,12 +1,14 @@
 module Page.ProductDetail exposing (Model, Msg, init, update, view)
 
-import Bootstrap.Button as Button
+import Bootstrap.Button as Button exposing (onClick, primary)
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Config
+import Entity.CartEntry exposing (CartEntry)
 import Entity.Product as Product exposing (Product)
 import Html exposing (Html, h4, h6, img, p, text)
 import Html.Attributes exposing (class, src)
+import Session
 import Util.Fetch as Fetch exposing (FetchState(..))
 import View.CustomAlert as CustomAlert
 
@@ -17,6 +19,7 @@ type alias Model =
 
 type Msg
     = Receive (FetchState Product)
+    | AddToCart Int
 
 
 init : Int -> ( Model, Cmd Msg )
@@ -27,11 +30,14 @@ init id =
     )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg _ =
+update : Msg -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
+update msg model _ sessionCmd =
     case msg of
         Receive fetchState ->
             ( fetchState, Cmd.none )
+
+        AddToCart id ->
+            ( model, sessionCmd (Session.MergeCart [ CartEntry id 1 ] (Just "/shoppingCart")) )
 
 
 view : Model -> Html Msg
@@ -42,7 +48,7 @@ view model =
         )
 
 
-productView : Product -> List (Grid.Column msg)
+productView : Product -> List (Grid.Column Msg)
 productView product =
     [ Grid.col [ Col.md8 ]
         [ img [ src product.imageUrl, class "img-fluid" ] []
@@ -52,7 +58,7 @@ productView product =
         , h4 [] [ text product.name ]
         , p [] [ text ("Price: $" ++ String.fromFloat product.price) ]
         , Button.button
-            [ Button.primary ]
+            [ primary, onClick (AddToCart product.id) ]
             [ text "Add to Cart" ]
         ]
     ]
