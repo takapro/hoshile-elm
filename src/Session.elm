@@ -1,12 +1,12 @@
 module Session exposing (Model, Msg(..), init, update)
 
-import Browser.Navigation as Nav
 import Config
 import Entity.CartEntry as CartEntry exposing (CartEntry)
 import Entity.User exposing (User)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Util.Fetch as Fetch exposing (FetchState(..))
+import Util.NavUtil as NavUtil
 
 
 type alias Model =
@@ -29,17 +29,17 @@ init =
     Model Nothing []
 
 
-update : Msg -> Nav.Key -> Model -> (Msg -> msg) -> (Msg -> Cmd msg) -> ( Model, Cmd msg )
-update msg key model wrapMsg sessionCmd =
+update : Msg -> NavUtil.Model -> Model -> (Msg -> msg) -> (Msg -> Cmd msg) -> ( Model, Cmd msg )
+update msg nav model wrapMsg sessionCmd =
     case msg of
         Login user path ->
             ( Model (Just user) (mergeCart model.shoppingCart user.shoppingCart)
-            , Cmd.batch [ Nav.pushUrl key path, sessionCmd UpdateCart ]
+            , Cmd.batch [ NavUtil.push nav path, sessionCmd UpdateCart ]
             )
 
         Logout path ->
             ( { model | user = Nothing, shoppingCart = [] }
-            , Nav.replaceUrl key path
+            , NavUtil.replace nav path
             )
 
         Update user ->
@@ -47,7 +47,7 @@ update msg key model wrapMsg sessionCmd =
 
         MergeCart cart maybePath ->
             ( { model | shoppingCart = CartEntry.mergeCart model.shoppingCart cart }
-            , Cmd.batch [ pushCmd key maybePath, sessionCmd UpdateCart ]
+            , Cmd.batch [ pushCmd nav maybePath, sessionCmd UpdateCart ]
             )
 
         UpdateCart ->
@@ -57,11 +57,11 @@ update msg key model wrapMsg sessionCmd =
             ( model, Cmd.none )
 
 
-pushCmd : Nav.Key -> Maybe String -> Cmd msg
-pushCmd key maybePath =
+pushCmd : NavUtil.Model -> Maybe String -> Cmd msg
+pushCmd nav maybePath =
     case maybePath of
         Just path ->
-            Nav.pushUrl key path
+            NavUtil.push nav path
 
         _ ->
             Cmd.none

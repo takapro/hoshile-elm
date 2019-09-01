@@ -9,11 +9,12 @@ import Bootstrap.Grid.Row as Row
 import Config
 import Entity.User as User exposing (User)
 import Html exposing (Html, a, h3, text)
-import Html.Attributes exposing (autofocus, class, href)
+import Html.Attributes exposing (autofocus, class)
 import Json.Encode as Encode
 import Session
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
+import Util.NavUtil as NavUtil
 import View.CustomAlert as CustomAlert
 
 
@@ -79,15 +80,15 @@ loginCmd { email, password } =
             ]
 
 
-view : Model -> Html Msg
-view model =
+view : NavUtil.Model -> Model -> Html Msg
+view nav model =
     Grid.container [ class "py-4" ]
         [ Grid.row [ Row.attrs [ class "justify-content-center" ] ]
             [ Grid.col [ Col.md6 ]
                 (ListUtil.append3
                     [ h3 [ class "mb-3" ]
                         [ text "Please Log in, or "
-                        , a [ href (linkPath model "/signup" "/signup?forPurchase=true") ] [ text "Sign up" ]
+                        , a [ NavUtil.href nav (linkPath model "/signup" "/signup?forPurchase=true") ] [ text "Sign up" ]
                         ]
                     ]
                     (CustomAlert.errorIfFailure "Login" model.loginState)

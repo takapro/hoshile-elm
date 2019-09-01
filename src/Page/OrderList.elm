@@ -2,7 +2,6 @@ module Page.OrderList exposing (Model, Msg, init, update, view)
 
 import Bootstrap.Grid as Grid
 import Bootstrap.Table as Table exposing (rowAttr)
-import Browser.Navigation as Nav
 import Config
 import Entity.Order as Order exposing (OrderHead)
 import Html exposing (Html, h3, text)
@@ -11,6 +10,7 @@ import Html.Events exposing (onClick)
 import Json.Decode as Decode
 import Session
 import Util.Fetch as Fetch exposing (FetchState(..))
+import Util.NavUtil as NavUtil
 import View.CustomAlert as CustomAlert
 
 
@@ -35,14 +35,14 @@ init { user } =
             ( Nothing, Cmd.none )
 
 
-update : Msg -> Nav.Key -> Model -> ( Model, Cmd Msg )
-update msg key model =
+update : Msg -> NavUtil.Model -> Model -> ( Model, Cmd Msg )
+update msg nav model =
     case msg of
         Receive fetchState ->
             ( Just fetchState, Cmd.none )
 
         Detail id ->
-            ( model, Nav.pushUrl key ("/order/" ++ String.fromInt id) )
+            ( model, NavUtil.push nav ("/order/" ++ String.fromInt id) )
 
 
 view : Model -> Html Msg

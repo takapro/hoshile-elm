@@ -8,9 +8,10 @@ import Bootstrap.Grid.Col as Col
 import Config
 import Entity.Product as Product exposing (Product)
 import Html exposing (Html, div, h4, h6, text)
-import Html.Attributes exposing (class, href, src)
+import Html.Attributes exposing (class, src)
 import Json.Decode as Decode
 import Util.Fetch as Fetch exposing (FetchState(..))
+import Util.NavUtil as NavUtil
 import View.CustomAlert as CustomAlert
 
 
@@ -36,21 +37,21 @@ update msg _ =
             ( fetchState, Cmd.none )
 
 
-view : Model -> Html Msg
-view model =
+view : NavUtil.Model -> Model -> Html Msg
+view nav model =
     Grid.container [ class "py-4" ]
         (CustomAlert.fetchState "Fetch" model <|
             \products ->
                 [ Grid.row []
                     (products
-                        |> List.map (\product -> Grid.col [ Col.md4 ] [ productCard product ])
+                        |> List.map (\product -> Grid.col [ Col.md4 ] [ productCard nav product ])
                     )
                 ]
         )
 
 
-productCard : Product -> Html msg
-productCard product =
+productCard : NavUtil.Model -> Product -> Html msg
+productCard nav product =
     Card.config [ Card.attrs [ class "mb-3" ] ]
         |> Card.imgTop [ src product.imageUrl, class "img-fluid" ] []
         |> Card.block
@@ -64,7 +65,7 @@ productCard product =
                 Button.linkButton
                     [ Button.secondary
                     , Button.attrs
-                        [ href ("/product/" ++ String.fromInt product.id)
+                        [ NavUtil.href nav ("/product/" ++ String.fromInt product.id)
                         , class "stretched-link"
                         ]
                     ]

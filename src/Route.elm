@@ -1,6 +1,5 @@
-module Route exposing (Route(..), parse)
+module Route exposing (Route(..), parser, pathParser)
 
-import Url exposing (Url)
 import Url.Parser exposing ((</>), (<?>), Parser, int, map, oneOf, s, top)
 import Url.Parser.Query as Query
 
@@ -18,11 +17,6 @@ type Route
     | OrderDetail Int
 
 
-parse : Url -> Maybe Route
-parse url =
-    Url.Parser.parse parser url
-
-
 parser : Parser (Route -> a) a
 parser =
     oneOf
@@ -37,3 +31,13 @@ parser =
         , map OrderList (s "orderList")
         , map OrderDetail (s "order" </> int)
         ]
+
+
+pathParser : List String -> Parser a b -> Parser a b
+pathParser list p =
+    case list of
+        [] ->
+            p
+
+        head :: tail ->
+            s head </> pathParser tail p

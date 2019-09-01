@@ -3,7 +3,6 @@ module Page.ShoppingCart exposing (Model, Msg, init, update, view)
 import Bootstrap.Button as Button exposing (attrs, disabled, large, light, onClick, primary, small)
 import Bootstrap.Grid as Grid
 import Bootstrap.Table as Table exposing (cellAttr)
-import Browser.Navigation as Nav
 import Config
 import Entity.CartEntry as CartEntry exposing (CartEntry, DetailEntry)
 import Entity.Product as Product exposing (Product)
@@ -13,6 +12,7 @@ import Json.Decode as Decode
 import Session
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
+import Util.NavUtil as NavUtil
 import View.CustomAlert as CustomAlert
 
 
@@ -37,8 +37,8 @@ init { user } =
     )
 
 
-update : Msg -> Nav.Key -> Session.Model -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
-update msg key { shoppingCart } model wrapMsg sessionCmd =
+update : Msg -> NavUtil.Model -> Session.Model -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
+update msg nav { shoppingCart } model wrapMsg sessionCmd =
     case msg of
         Receive fetchState ->
             ( { model | fetchState = fetchState }, Cmd.none )
@@ -54,10 +54,10 @@ update msg key { shoppingCart } model wrapMsg sessionCmd =
                     )
 
                 Nothing ->
-                    ( model, Nav.pushUrl key "/login?forPurchase=true" )
+                    ( model, NavUtil.push nav "/login?forPurchase=true" )
 
         ReceivePurchase (Success orderId) ->
-            ( model, Nav.pushUrl key ("/orders/" ++ String.fromInt orderId) )
+            ( model, NavUtil.push nav ("/orders/" ++ String.fromInt orderId) )
 
         ReceivePurchase purchaseState ->
             ( { model | purchaseState = Just purchaseState }, Cmd.none )
