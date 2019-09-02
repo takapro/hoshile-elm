@@ -246,7 +246,7 @@ mapPage model pageConstructor msgConstructor =
 view : Model -> Browser.Document Msg
 view model =
     let
-        ( title, subView ) =
+        ( title, content ) =
             pageView model
     in
     { title =
@@ -259,7 +259,7 @@ view model =
         [ div []
             [ Header.view model.config
             , Navigation.view model.config model.session model.navState NavMsg
-            , subView
+            , content
             , Footer.view
             ]
         ]

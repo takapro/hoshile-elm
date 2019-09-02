@@ -12,6 +12,7 @@ import Html exposing (Html, a, h3, text)
 import Html.Attributes exposing (autofocus, class)
 import Json.Encode as Encode
 import Session
+import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
 import Util.NavUtil exposing (href)
@@ -83,7 +84,7 @@ cantSignup { name, email, password1, password2, signupState } =
 
 signupCmd : Config -> Model -> Cmd Msg
 signupCmd config { name, email, password1 } =
-    Fetch.post Receive User.decoder (Config.userSignup config) <|
+    Fetch.post Receive User.decoder (Api.user config "signup") <|
         Encode.object
             [ ( "name", Encode.string name )
             , ( "email", Encode.string email )

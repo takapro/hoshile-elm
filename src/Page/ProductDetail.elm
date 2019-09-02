@@ -9,6 +9,7 @@ import Entity.Product as Product exposing (Product)
 import Html exposing (Html, h4, h6, img, p, text)
 import Html.Attributes exposing (class, src)
 import Session
+import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import View.CustomAlert as CustomAlert
 
@@ -25,7 +26,7 @@ type Msg
 init : Config -> Int -> ( Model, Cmd Msg )
 init config id =
     ( Loading
-    , Fetch.get Receive Product.decoder (Config.product config id)
+    , Fetch.get Receive Product.decoder (Api.product config id)
     )
 
 

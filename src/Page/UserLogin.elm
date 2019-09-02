@@ -12,6 +12,7 @@ import Html exposing (Html, a, h3, text)
 import Html.Attributes exposing (autofocus, class)
 import Json.Encode as Encode
 import Session
+import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
 import Util.NavUtil exposing (href)
@@ -73,7 +74,7 @@ cantLogin { email, password, loginState } =
 
 loginCmd : Config -> Model -> Cmd Msg
 loginCmd config { email, password } =
-    Fetch.post Receive User.decoder (Config.userLogin config) <|
+    Fetch.post Receive User.decoder (Api.user config "login") <|
         Encode.object
             [ ( "email", Encode.string email )
             , ( "password", Encode.string password )

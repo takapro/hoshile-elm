@@ -12,6 +12,7 @@ import Html exposing (Html, h3, hr, text)
 import Html.Attributes exposing (class)
 import Json.Encode as Encode
 import Session exposing (Session)
+import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
 import View.CustomAlert as CustomAlert
@@ -102,7 +103,7 @@ profileCmd : Config -> Model -> Cmd Msg
 profileCmd config model =
     case model.token of
         Just token ->
-            Fetch.putWithToken ReceiveProfile User.decoder token (Config.userProfile config) <|
+            Fetch.putWithToken ReceiveProfile User.decoder token (Api.user config "profile") <|
                 Encode.object
                     [ ( "name", Encode.string model.name )
                     , ( "email", Encode.string model.email )
@@ -116,7 +117,7 @@ passwordCmd : Config -> Model -> Cmd Msg
 passwordCmd config model =
     case model.token of
         Just token ->
-            Fetch.putWithToken ReceivePassword User.decoder token (Config.userPassword config) <|
+            Fetch.putWithToken ReceivePassword User.decoder token (Api.user config "password") <|
                 Encode.object
                     [ ( "curPassword", Encode.string model.curPassword )
                     , ( "newPassword", Encode.string model.password1 )

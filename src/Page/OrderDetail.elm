@@ -7,6 +7,7 @@ import Entity.Order as Order exposing (OrderDetail, OrderHead)
 import Html exposing (Html, h3, img, p, text)
 import Html.Attributes exposing (class, colspan, src)
 import Session exposing (Session)
+import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import View.CustomAlert as CustomAlert
 
@@ -24,7 +25,7 @@ init config { user } id =
     case user of
         Just { token } ->
             ( Just Loading
-            , Fetch.getWithToken Receive Order.decoder token (Config.order config id)
+            , Fetch.getWithToken Receive Order.decoder token (Api.order config id)
             )
 
         Nothing ->

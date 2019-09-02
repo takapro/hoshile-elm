@@ -5,6 +5,7 @@ import Entity.CartEntry as CartEntry exposing (CartEntry)
 import Entity.User exposing (User)
 import Json.Decode as Decode
 import Json.Encode as Encode
+import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.NavUtil as NavUtil
 
@@ -81,7 +82,7 @@ updateCart : Config -> Session -> Cmd Msg
 updateCart config { user, shoppingCart } =
     case user of
         Just { token } ->
-            Fetch.putWithToken Receive Decode.bool token (Config.shoppingCart config) <|
+            Fetch.putWithToken Receive Decode.bool token (Api.user config "shoppingCart") <|
                 let
                     json =
                         Encode.encode 0 (CartEntry.encodeCart shoppingCart)

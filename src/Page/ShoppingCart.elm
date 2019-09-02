@@ -10,6 +10,7 @@ import Html exposing (Html, div, h3, img, span, text)
 import Html.Attributes exposing (class, colspan, src)
 import Json.Decode as Decode
 import Session exposing (Session)
+import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
 import Util.NavUtil as NavUtil
@@ -33,7 +34,7 @@ type Msg
 init : Config -> Session -> ( Model, Cmd Msg )
 init config { user } =
     ( Model (Maybe.map .token user) Loading Nothing
-    , Fetch.get Receive (Decode.list Product.decoder) (Config.products config)
+    , Fetch.get Receive (Decode.list Product.decoder) (Api.products config)
     )
 
 
@@ -70,7 +71,7 @@ cantPurchase { shoppingCart } { token } =
 
 purchaseCmd : Config -> String -> List CartEntry -> Cmd Msg
 purchaseCmd config token shoppingCart =
-    Fetch.postWithToken ReceivePurchase Decode.int token (Config.orders config) <|
+    Fetch.postWithToken ReceivePurchase Decode.int token (Api.orders config) <|
         CartEntry.encodeCart shoppingCart
 
 

@@ -9,6 +9,7 @@ import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode
 import Session exposing (Session)
+import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.NavUtil as NavUtil
 import View.CustomAlert as CustomAlert
@@ -28,7 +29,7 @@ init config { user } =
     case user of
         Just { token } ->
             ( Just Loading
-            , Fetch.getWithToken Receive (Decode.list Order.decoder) token (Config.orders config)
+            , Fetch.getWithToken Receive (Decode.list Order.decoder) token (Api.orders config)
             )
 
         Nothing ->

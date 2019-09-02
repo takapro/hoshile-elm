@@ -17,7 +17,7 @@ Build the `public/app.js` with `elm make` command (or just `make` may work).
 $ elm make src/App.elm --output public/app.js
 ```
 
-The single page application requires a web server to run.
+Run the dev server, and open the application (http://localhost:8000/) manually.
 
 ```
 $ node server.js
