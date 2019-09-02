@@ -3,12 +3,12 @@ module Page.ProductDetail exposing (Model, Msg, init, title, update, view)
 import Bootstrap.Button as Button exposing (onClick, primary)
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
-import Config exposing (Config)
 import Entity.CartEntry exposing (CartEntry)
 import Entity.Product as Product exposing (Product)
 import Html exposing (Html, h4, h6, img, p, text)
 import Html.Attributes exposing (class, src)
 import Session
+import Shared exposing (Shared)
 import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import View.CustomAlert as CustomAlert
@@ -23,15 +23,15 @@ type Msg
     | AddToCart Int
 
 
-init : Config -> Int -> ( Model, Cmd Msg )
-init config id =
+init : Shared t -> Int -> ( Model, Cmd Msg )
+init shared id =
     ( Loading
-    , Fetch.get Receive Product.decoder (Api.product config id)
+    , Fetch.get Receive Product.decoder (Api.product shared.config id)
     )
 
 
-update : Msg -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
-update msg model _ sessionCmd =
+update : Msg -> Shared t -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
+update msg shared model _ sessionCmd =
     case msg of
         Receive fetchState ->
             ( fetchState, Cmd.none )
@@ -50,8 +50,8 @@ title model defaultTitle =
             defaultTitle
 
 
-view : Model -> Html Msg
-view model =
+view : Shared t -> Model -> Html Msg
+view shared model =
     Grid.container [ class "py-4" ]
         (CustomAlert.fetchState "Fetch" model <|
             \product -> [ Grid.row [] (productView product) ]

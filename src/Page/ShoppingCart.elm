@@ -3,13 +3,13 @@ module Page.ShoppingCart exposing (Model, Msg, init, update, view)
 import Bootstrap.Button as Button exposing (attrs, disabled, large, light, onClick, primary, small)
 import Bootstrap.Grid as Grid
 import Bootstrap.Table as Table exposing (cellAttr)
-import Config exposing (Config)
 import Entity.CartEntry as CartEntry exposing (CartEntry, DetailEntry)
 import Entity.Product as Product exposing (Product)
 import Html exposing (Html, div, h3, img, span, text)
 import Html.Attributes exposing (class, colspan, src)
 import Json.Decode as Decode
-import Session exposing (Session)
+import Session
+import Shared exposing (Shared)
 import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
@@ -18,8 +18,7 @@ import View.CustomAlert as CustomAlert
 
 
 type alias Model =
-    { token : Maybe String
-    , fetchState : FetchState (List Product)
+    { fetchState : FetchState (List Product)
     , purchaseState : Maybe (FetchState Int)
     }
 
@@ -31,15 +30,15 @@ type Msg
     | ReceivePurchase (FetchState Int)
 
 
-init : Config -> Session -> ( Model, Cmd Msg )
-init config { user } =
-    ( Model (Maybe.map .token user) Loading Nothing
-    , Fetch.get Receive (Decode.list Product.decoder) (Api.products config)
+init : Shared t -> ( Model, Cmd Msg )
+init shared =
+    ( Model Loading Nothing
+    , Fetch.get Receive (Decode.list Product.decoder) (Api.products shared.config)
     )
 
 
-update : Msg -> Config -> Session -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
-update msg config { shoppingCart } model wrapMsg sessionCmd =
+update : Msg -> Shared t -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
+update msg shared model wrapMsg sessionCmd =
     case msg of
         Receive fetchState ->
             ( { model | fetchState = fetchState }, Cmd.none )
@@ -48,43 +47,43 @@ update msg config { shoppingCart } model wrapMsg sessionCmd =
             ( model, sessionCmd (Session.MergeCart [ CartEntry id delta ] Nothing) )
 
         Purchase ->
-            case model.token of
-                Just token ->
+            case shared.session.user of
+                Just { token } ->
                     ( { model | purchaseState = Just Loading }
-                    , Cmd.map wrapMsg (purchaseCmd config token shoppingCart)
+                    , Cmd.map wrapMsg (purchaseCmd shared token)
                     )
 
                 Nothing ->
-                    ( model, NavUtil.push config.nav "/login?forPurchase=true" )
+                    ( model, NavUtil.push shared.config.nav "/login?forPurchase=true" )
 
         ReceivePurchase (Success orderId) ->
-            ( model, NavUtil.push config.nav ("/orders/" ++ String.fromInt orderId) )
+            ( model, NavUtil.push shared.config.nav ("/orders/" ++ String.fromInt orderId) )
 
         ReceivePurchase purchaseState ->
             ( { model | purchaseState = Just purchaseState }, Cmd.none )
 
 
-cantPurchase : Session -> Model -> Bool
-cantPurchase { shoppingCart } { token } =
-    token /= Nothing && shoppingCart == []
+cantPurchase : Shared t -> Bool
+cantPurchase shared =
+    shared.session.user /= Nothing && shared.session.shoppingCart == []
 
 
-purchaseCmd : Config -> String -> List CartEntry -> Cmd Msg
-purchaseCmd config token shoppingCart =
-    Fetch.postWithToken ReceivePurchase Decode.int token (Api.orders config) <|
-        CartEntry.encodeCart shoppingCart
+purchaseCmd : Shared t -> String -> Cmd Msg
+purchaseCmd shared token =
+    Fetch.postWithToken ReceivePurchase Decode.int token (Api.orders shared.config) <|
+        CartEntry.encodeCart shared.session.shoppingCart
 
 
-view : Session -> Model -> Html Msg
-view session model =
+view : Shared t -> Model -> Html Msg
+view shared model =
     Grid.container [ class "py-4" ]
         (CustomAlert.fetchState "Fetch" model.fetchState <|
-            \products -> cartView session model (CartEntry.joinProducts session.shoppingCart products)
+            \products -> cartView shared model (CartEntry.joinProducts shared.session.shoppingCart products)
         )
 
 
-cartView : Session -> Model -> List DetailEntry -> List (Html Msg)
-cartView session model entries =
+cartView : Shared t -> Model -> List DetailEntry -> List (Html Msg)
+cartView shared model entries =
     ListUtil.append3
         [ h3 [ class "mb-3" ] [ text "Shopping Cart" ]
         ]
@@ -92,9 +91,9 @@ cartView session model entries =
         [ cartTable entries
         , div [ class "text-center" ]
             [ Button.button
-                [ primary, large, attrs [ class "w-25" ], onClick Purchase, disabled (cantPurchase session model) ]
+                [ primary, large, attrs [ class "w-25" ], onClick Purchase, disabled (cantPurchase shared) ]
                 (CustomAlert.spinnerLabel model.purchaseState <|
-                    if model.token /= Nothing then
+                    if shared.session.user /= Nothing then
                         "Purchase"
 
                     else

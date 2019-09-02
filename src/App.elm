@@ -3,7 +3,7 @@ module App exposing (main)
 import Bootstrap.Navbar as Navbar
 import Browser
 import Browser.Navigation as Nav
-import Config exposing (Config, Flags)
+import Config exposing (Flags)
 import Html exposing (Html, div)
 import Page.About
 import Page.NotFound
@@ -16,7 +16,8 @@ import Page.UserLogin
 import Page.UserProfile
 import Page.UserSignup
 import Route exposing (Route)
-import Session exposing (Session)
+import Session
+import Shared exposing (Shared)
 import Task
 import Url exposing (Url)
 import Util.NavUtil as NavUtil
@@ -26,11 +27,7 @@ import View.Navigation as Navigation
 
 
 type alias Model =
-    { config : Config
-    , session : Session
-    , navState : Navbar.State
-    , page : Page
-    }
+    Shared { page : Page }
 
 
 type Page
@@ -83,7 +80,12 @@ init flags url key =
             Navbar.initialState NavMsg
 
         ( model, cmd ) =
-            goTo (NavUtil.parse config.nav url) (Model config Session.init navState NotFound)
+            goTo (NavUtil.parse config.nav url)
+                { config = config
+                , session = Session.init
+                , navState = navState
+                , page = NotFound
+                }
     in
     ( model, Cmd.batch [ navCmd, cmd ] )
 
@@ -121,7 +123,7 @@ update msg model =
         ProductListMsg pageMsg ->
             case model.page of
                 ProductList page ->
-                    Page.ProductList.update pageMsg page
+                    Page.ProductList.update pageMsg model page
                         |> mapPage model ProductList ProductListMsg
 
                 _ ->
@@ -130,7 +132,7 @@ update msg model =
         ProductDetailMsg pageMsg ->
             case model.page of
                 ProductDetail page ->
-                    Page.ProductDetail.update pageMsg page ProductDetailMsg sessionCmd
+                    Page.ProductDetail.update pageMsg model page ProductDetailMsg sessionCmd
                         |> mapPage model ProductDetail identity
 
                 _ ->
@@ -139,7 +141,7 @@ update msg model =
         UserLoginMsg pageMsg ->
             case model.page of
                 UserLogin page ->
-                    Page.UserLogin.update pageMsg model.config page UserLoginMsg sessionCmd
+                    Page.UserLogin.update pageMsg model page UserLoginMsg sessionCmd
                         |> mapPage model UserLogin identity
 
                 _ ->
@@ -148,7 +150,7 @@ update msg model =
         UserSignupMsg pageMsg ->
             case model.page of
                 UserSignup page ->
-                    Page.UserSignup.update pageMsg model.config page UserSignupMsg sessionCmd
+                    Page.UserSignup.update pageMsg model page UserSignupMsg sessionCmd
                         |> mapPage model UserSignup identity
 
                 _ ->
@@ -157,7 +159,7 @@ update msg model =
         UserProfileMsg pageMsg ->
             case model.page of
                 UserProfile page ->
-                    Page.UserProfile.update pageMsg model.config page UserProfileMsg sessionCmd
+                    Page.UserProfile.update pageMsg model page UserProfileMsg sessionCmd
                         |> mapPage model UserProfile identity
 
                 _ ->
@@ -166,7 +168,7 @@ update msg model =
         ShoppingCartMsg pageMsg ->
             case model.page of
                 ShoppingCart page ->
-                    Page.ShoppingCart.update pageMsg model.config model.session page ShoppingCartMsg sessionCmd
+                    Page.ShoppingCart.update pageMsg model page ShoppingCartMsg sessionCmd
                         |> mapPage model ShoppingCart identity
 
                 _ ->
@@ -175,7 +177,7 @@ update msg model =
         OrderListMsg pageMsg ->
             case model.page of
                 OrderList page ->
-                    Page.OrderList.update pageMsg model.config page
+                    Page.OrderList.update pageMsg model page
                         |> mapPage model OrderList OrderListMsg
 
                 _ ->
@@ -184,7 +186,7 @@ update msg model =
         OrderDetailMsg pageMsg ->
             case model.page of
                 OrderDetail page ->
-                    Page.OrderDetail.update pageMsg page
+                    Page.OrderDetail.update pageMsg model page
                         |> mapPage model OrderDetail OrderDetailMsg
 
                 _ ->
@@ -198,49 +200,47 @@ goTo route model =
             ( { model | page = NotFound }, Cmd.none )
 
         Just Route.Top ->
-            Page.ProductList.init model.config
+            Page.ProductList.init model
                 |> mapPage model ProductList ProductListMsg
 
         Just (Route.Product id) ->
-            Page.ProductDetail.init model.config id
+            Page.ProductDetail.init model id
                 |> mapPage model ProductDetail ProductDetailMsg
 
         Just Route.About ->
             ( { model | page = About }, Cmd.none )
 
         Just (Route.Login forPurchase) ->
-            Page.UserLogin.init forPurchase
+            Page.UserLogin.init model forPurchase
                 |> mapPage model UserLogin UserLoginMsg
 
         Just Route.Logout ->
             ( model, sessionCmd (Session.Logout "/") )
 
         Just (Route.Signup forPurchase) ->
-            Page.UserSignup.init forPurchase
+            Page.UserSignup.init model forPurchase
                 |> mapPage model UserSignup UserSignupMsg
 
         Just Route.Profile ->
-            Page.UserProfile.init model.session
+            Page.UserProfile.init model
                 |> mapPage model UserProfile UserProfileMsg
 
         Just Route.ShoppingCart ->
-            Page.ShoppingCart.init model.config model.session
+            Page.ShoppingCart.init model
                 |> mapPage model ShoppingCart ShoppingCartMsg
 
         Just Route.OrderList ->
-            Page.OrderList.init model.config model.session
+            Page.OrderList.init model
                 |> mapPage model OrderList OrderListMsg
 
         Just (Route.OrderDetail id) ->
-            Page.OrderDetail.init model.config model.session id
+            Page.OrderDetail.init model id
                 |> mapPage model OrderDetail OrderDetailMsg
 
 
 mapPage : Model -> (page -> Page) -> (msg -> Msg) -> ( page, Cmd msg ) -> ( Model, Cmd Msg )
 mapPage model pageConstructor msgConstructor =
-    Tuple.mapBoth
-        (\page -> { model | page = pageConstructor page })
-        (Cmd.map msgConstructor)
+    Tuple.mapBoth (\pageModel -> { model | page = pageConstructor pageModel }) (Cmd.map msgConstructor)
 
 
 view : Model -> Browser.Document Msg
@@ -257,8 +257,8 @@ view model =
             model.config.title ++ " - " ++ title
     , body =
         [ div []
-            [ Header.view model.config
-            , Navigation.view model.config model.session model.navState NavMsg
+            [ Header.view model
+            , Navigation.view model NavMsg
             , content
             , Footer.view
             ]
@@ -273,30 +273,30 @@ pageView model =
             ( "Not Found", Page.NotFound.view )
 
         ProductList page ->
-            ( "", Html.map ProductListMsg (Page.ProductList.view model.config page) )
+            ( "", Html.map ProductListMsg (Page.ProductList.view model page) )
 
         ProductDetail page ->
             ( Page.ProductDetail.title page "Product Detail"
-            , Html.map ProductDetailMsg (Page.ProductDetail.view page)
+            , Html.map ProductDetailMsg (Page.ProductDetail.view model page)
             )
 
         About ->
             ( "About", Page.About.view )
 
         UserLogin page ->
-            ( "Log in", Html.map UserLoginMsg (Page.UserLogin.view model.config page) )
+            ( "Log in", Html.map UserLoginMsg (Page.UserLogin.view model page) )
 
         UserSignup page ->
-            ( "Sign up", Html.map UserSignupMsg (Page.UserSignup.view model.config page) )
+            ( "Sign up", Html.map UserSignupMsg (Page.UserSignup.view model page) )
 
         UserProfile page ->
-            ( "Profile", Html.map UserProfileMsg (Page.UserProfile.view page) )
+            ( "Profile", Html.map UserProfileMsg (Page.UserProfile.view model page) )
 
         ShoppingCart page ->
-            ( "Shopping Cart", Html.map ShoppingCartMsg (Page.ShoppingCart.view model.session page) )
+            ( "Shopping Cart", Html.map ShoppingCartMsg (Page.ShoppingCart.view model page) )
 
         OrderList page ->
-            ( "Order List", Html.map OrderListMsg (Page.OrderList.view page) )
+            ( "Order List", Html.map OrderListMsg (Page.OrderList.view model page) )
 
         OrderDetail page ->
-            ( "Order Detail", Html.map OrderDetailMsg (Page.OrderDetail.view page) )
+            ( "Order Detail", Html.map OrderDetailMsg (Page.OrderDetail.view model page) )

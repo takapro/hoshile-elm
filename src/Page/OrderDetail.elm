@@ -2,11 +2,10 @@ module Page.OrderDetail exposing (Model, Msg, init, update, view)
 
 import Bootstrap.Grid as Grid
 import Bootstrap.Table as Table exposing (cellAttr)
-import Config exposing (Config)
 import Entity.Order as Order exposing (OrderDetail, OrderHead)
 import Html exposing (Html, h3, img, p, text)
 import Html.Attributes exposing (class, colspan, src)
-import Session exposing (Session)
+import Shared exposing (Shared)
 import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import View.CustomAlert as CustomAlert
@@ -20,27 +19,27 @@ type Msg
     = Receive (FetchState OrderHead)
 
 
-init : Config -> Session -> Int -> ( Model, Cmd Msg )
-init config { user } id =
-    case user of
+init : Shared t -> Int -> ( Model, Cmd Msg )
+init shared id =
+    case shared.session.user of
         Just { token } ->
             ( Just Loading
-            , Fetch.getWithToken Receive Order.decoder token (Api.order config id)
+            , Fetch.getWithToken Receive Order.decoder token (Api.order shared.config id)
             )
 
         Nothing ->
             ( Nothing, Cmd.none )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg _ =
+update : Msg -> Shared t -> Model -> ( Model, Cmd Msg )
+update msg shared model =
     case msg of
         Receive fetchState ->
             ( Just fetchState, Cmd.none )
 
 
-view : Model -> Html Msg
-view model =
+view : Shared t -> Model -> Html Msg
+view shared model =
     Grid.container [ class "py-4" ]
         (CustomAlert.maybeFetchState "Not logged in." "Fetch" model <|
             \order ->
