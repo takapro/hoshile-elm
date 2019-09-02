@@ -3,7 +3,7 @@ module Page.ProductDetail exposing (Model, Msg, init, update, view)
 import Bootstrap.Button as Button exposing (onClick, primary)
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
-import Config
+import Config exposing (Config)
 import Entity.CartEntry exposing (CartEntry)
 import Entity.Product as Product exposing (Product)
 import Html exposing (Html, h4, h6, img, p, text)
@@ -22,11 +22,10 @@ type Msg
     | AddToCart Int
 
 
-init : Int -> ( Model, Cmd Msg )
-init id =
+init : Config -> Int -> ( Model, Cmd Msg )
+init config id =
     ( Loading
-    , Fetch.get Receive Product.decoder <|
-        (Config.productApi ++ "/" ++ String.fromInt id)
+    , Fetch.get Receive Product.decoder (Config.product config id)
     )
 
 

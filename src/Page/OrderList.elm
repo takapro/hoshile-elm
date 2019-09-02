@@ -2,7 +2,7 @@ module Page.OrderList exposing (Model, Msg, init, update, view)
 
 import Bootstrap.Grid as Grid
 import Bootstrap.Table as Table exposing (rowAttr)
-import Config
+import Config exposing (Config)
 import Entity.Order as Order exposing (OrderHead)
 import Html exposing (Html, h3, text)
 import Html.Attributes exposing (class)
@@ -23,26 +23,26 @@ type Msg
     | Detail Int
 
 
-init : Session.Model -> ( Model, Cmd Msg )
-init { user } =
+init : Config -> Session.Model -> ( Model, Cmd Msg )
+init config { user } =
     case user of
         Just { token } ->
             ( Just Loading
-            , Fetch.getWithToken Receive (Decode.list Order.decoder) token Config.orderApi
+            , Fetch.getWithToken Receive (Decode.list Order.decoder) token (Config.orders config)
             )
 
         Nothing ->
             ( Nothing, Cmd.none )
 
 
-update : Msg -> NavUtil.Model -> Model -> ( Model, Cmd Msg )
-update msg nav model =
+update : Msg -> Config -> Model -> ( Model, Cmd Msg )
+update msg config model =
     case msg of
         Receive fetchState ->
             ( Just fetchState, Cmd.none )
 
         Detail id ->
-            ( model, NavUtil.push nav ("/order/" ++ String.fromInt id) )
+            ( model, NavUtil.push config.nav ("/order/" ++ String.fromInt id) )
 
 
 view : Model -> Html Msg

@@ -6,7 +6,7 @@ import Bootstrap.Form.Input as Input exposing (onInput, value)
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
-import Config
+import Config exposing (Config)
 import Entity.User as User exposing (User)
 import Html exposing (Html, a, h3, text)
 import Html.Attributes exposing (autofocus, class)
@@ -14,7 +14,7 @@ import Json.Encode as Encode
 import Session
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
-import Util.NavUtil as NavUtil
+import Util.NavUtil exposing (href)
 import View.CustomAlert as CustomAlert
 
 
@@ -42,8 +42,8 @@ init forPurchase =
     ( Model (forPurchase == Just "true") "" "" "" "" Nothing, Cmd.none )
 
 
-update : Msg -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
-update msg model wrapMsg sessionCmd =
+update : Msg -> Config -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
+update msg config model wrapMsg sessionCmd =
     case msg of
         Name name ->
             ( { model | name = name }, Cmd.none )
@@ -58,7 +58,7 @@ update msg model wrapMsg sessionCmd =
             ( { model | password2 = password2 }, Cmd.none )
 
         Signup ->
-            ( { model | signupState = Just Loading }, Cmd.map wrapMsg (signupCmd model) )
+            ( { model | signupState = Just Loading }, Cmd.map wrapMsg (signupCmd config model) )
 
         Receive (Success user) ->
             ( model, sessionCmd (Session.Login user (linkPath model "/" "/shoppingCart")) )
@@ -81,9 +81,9 @@ cantSignup { name, email, password1, password2, signupState } =
     name == "" || email == "" || password1 == "" || password1 /= password2 || signupState == Just Loading
 
 
-signupCmd : Model -> Cmd Msg
-signupCmd { name, email, password1 } =
-    Fetch.post Receive User.decoder (Config.userApi ++ "/signup") <|
+signupCmd : Config -> Model -> Cmd Msg
+signupCmd config { name, email, password1 } =
+    Fetch.post Receive User.decoder (Config.userSignup config) <|
         Encode.object
             [ ( "name", Encode.string name )
             , ( "email", Encode.string email )
@@ -91,15 +91,15 @@ signupCmd { name, email, password1 } =
             ]
 
 
-view : NavUtil.Model -> Model -> Html Msg
-view nav model =
+view : Config -> Model -> Html Msg
+view { nav } model =
     Grid.container [ class "py-4" ]
         [ Grid.row [ Row.attrs [ class "justify-content-center" ] ]
             [ Grid.col [ Col.md6 ]
                 (ListUtil.append3
                     [ h3 [ class "mb-3" ]
                         [ text "Please Sign up, or "
-                        , a [ NavUtil.href nav (linkPath model "/login" "/login?forPurchase=true") ] [ text "Log in" ]
+                        , a [ href nav (linkPath model "/login" "/login?forPurchase=true") ] [ text "Log in" ]
                         ]
                     ]
                     (CustomAlert.errorIfFailure "Signup" model.signupState)

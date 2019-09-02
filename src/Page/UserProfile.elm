@@ -6,7 +6,7 @@ import Bootstrap.Form.Input as Input exposing (onInput, value)
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
-import Config
+import Config exposing (Config)
 import Entity.User as User exposing (User)
 import Html exposing (Html, h3, hr, text)
 import Html.Attributes exposing (class)
@@ -51,8 +51,8 @@ init { user } =
             ( Model Nothing "" "" "" "" "" Nothing Nothing, Cmd.none )
 
 
-update : Msg -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
-update msg model wrapMsg sessionCmd =
+update : Msg -> Config -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
+update msg config model wrapMsg sessionCmd =
     case msg of
         Name name ->
             ( { model | name = name }, Cmd.none )
@@ -70,7 +70,7 @@ update msg model wrapMsg sessionCmd =
             ( { model | password2 = password2 }, Cmd.none )
 
         UpdateProfile ->
-            ( { model | profileState = Just Loading }, Cmd.map wrapMsg (profileCmd model) )
+            ( { model | profileState = Just Loading }, Cmd.map wrapMsg (profileCmd config model) )
 
         ReceiveProfile (Success user) ->
             ( { model | profileState = Nothing }, sessionCmd (Session.Update user) )
@@ -79,7 +79,7 @@ update msg model wrapMsg sessionCmd =
             ( { model | profileState = Just fetchState }, Cmd.none )
 
         UpdatePassword ->
-            ( { model | passwordState = Just Loading }, Cmd.map wrapMsg (passwordCmd model) )
+            ( { model | passwordState = Just Loading }, Cmd.map wrapMsg (passwordCmd config model) )
 
         ReceivePassword (Success user) ->
             ( { model | passwordState = Nothing }, sessionCmd (Session.Update user) )
@@ -98,11 +98,11 @@ cantUpdatePassword { curPassword, password1, password2, passwordState } =
     curPassword == "" || password1 == "" || password1 /= password2 || passwordState == Just Loading
 
 
-profileCmd : Model -> Cmd Msg
-profileCmd model =
+profileCmd : Config -> Model -> Cmd Msg
+profileCmd config model =
     case model.token of
         Just token ->
-            Fetch.putWithToken ReceiveProfile User.decoder token (Config.userApi ++ "/profile") <|
+            Fetch.putWithToken ReceiveProfile User.decoder token (Config.userProfile config) <|
                 Encode.object
                     [ ( "name", Encode.string model.name )
                     , ( "email", Encode.string model.email )
@@ -112,11 +112,11 @@ profileCmd model =
             Cmd.none
 
 
-passwordCmd : Model -> Cmd Msg
-passwordCmd model =
+passwordCmd : Config -> Model -> Cmd Msg
+passwordCmd config model =
     case model.token of
         Just token ->
-            Fetch.putWithToken ReceivePassword User.decoder token (Config.userApi ++ "/password") <|
+            Fetch.putWithToken ReceivePassword User.decoder token (Config.userPassword config) <|
                 Encode.object
                     [ ( "curPassword", Encode.string model.curPassword )
                     , ( "newPassword", Encode.string model.password1 )

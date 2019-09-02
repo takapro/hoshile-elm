@@ -4,15 +4,19 @@
     <base href="/">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>HoshiLe’s Store</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="app.js"></script>
-    <title>HoshiLe’s Store</title>
   </head>
   <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
     <script>
-      Elm.App.init({
-        flags: { basePath: new URL(document.baseURI).pathname }
-      });
+      var config = {
+        siteName: document.title,
+        basePath: new URL(document.baseURI).pathname,
+        apiBase: "https://hoshile-api.herokuapp.com/"
+      };
+      Elm.App.init({ flags: config });
     </script>
   </body>
 </html>

@@ -5,13 +5,13 @@ import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
-import Config
+import Config exposing (Config)
 import Entity.Product as Product exposing (Product)
 import Html exposing (Html, div, h4, h6, text)
 import Html.Attributes exposing (class, src)
 import Json.Decode as Decode
 import Util.Fetch as Fetch exposing (FetchState(..))
-import Util.NavUtil as NavUtil
+import Util.NavUtil exposing (href)
 import View.CustomAlert as CustomAlert
 
 
@@ -23,10 +23,10 @@ type Msg
     = Receive (FetchState (List Product))
 
 
-init : ( Model, Cmd Msg )
-init =
+init : Config -> ( Model, Cmd Msg )
+init config =
     ( Loading
-    , Fetch.get Receive (Decode.list Product.decoder) Config.productApi
+    , Fetch.get Receive (Decode.list Product.decoder) (Config.products config)
     )
 
 
@@ -37,21 +37,21 @@ update msg _ =
             ( fetchState, Cmd.none )
 
 
-view : NavUtil.Model -> Model -> Html Msg
-view nav model =
+view : Config -> Model -> Html Msg
+view config model =
     Grid.container [ class "py-4" ]
         (CustomAlert.fetchState "Fetch" model <|
             \products ->
                 [ Grid.row []
                     (products
-                        |> List.map (\product -> Grid.col [ Col.md4 ] [ productCard nav product ])
+                        |> List.map (\product -> Grid.col [ Col.md4 ] [ productCard config product ])
                     )
                 ]
         )
 
 
-productCard : NavUtil.Model -> Product -> Html msg
-productCard nav product =
+productCard : Config -> Product -> Html msg
+productCard { nav } product =
     Card.config [ Card.attrs [ class "mb-3" ] ]
         |> Card.imgTop [ src product.imageUrl, class "img-fluid" ] []
         |> Card.block
@@ -65,7 +65,7 @@ productCard nav product =
                 Button.linkButton
                     [ Button.secondary
                     , Button.attrs
-                        [ NavUtil.href nav ("/product/" ++ String.fromInt product.id)
+                        [ href nav ("/product/" ++ String.fromInt product.id)
                         , class "stretched-link"
                         ]
                     ]

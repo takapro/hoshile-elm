@@ -1,26 +1,68 @@
-module Config exposing (orderApi, productApi, title, userApi)
+module Config exposing (Config, Flags, init, order, orders, product, products, shoppingCart, userLogin, userPassword, userProfile, userSignup)
+
+import Browser.Navigation as Nav
+import Util.NavUtil as NavUtil
 
 
-title : String
-title =
-    "HoshiLe’s Store"
+type alias Flags =
+    { siteName : String
+    , basePath : String
+    , apiBase : String
+    }
 
 
-apiBase : String
-apiBase =
-    "https://hoshile-api.herokuapp.com/"
+type alias Config =
+    { title : String
+    , nav : NavUtil.Model
+    , apiBase : String
+    }
 
 
-productApi : String
-productApi =
+init : Flags -> Nav.Key -> Config
+init { siteName, basePath, apiBase } key =
+    Config siteName (NavUtil.init key basePath) apiBase
+
+
+products : Config -> String
+products { apiBase } =
     apiBase ++ "products"
 
 
-userApi : String
-userApi =
-    apiBase ++ "user"
+product : Config -> Int -> String
+product { apiBase } id =
+    apiBase ++ "products" ++ "/" ++ String.fromInt id
 
 
-orderApi : String
-orderApi =
+userLogin : Config -> String
+userLogin { apiBase } =
+    apiBase ++ "user/login"
+
+
+userSignup : Config -> String
+userSignup { apiBase } =
+    apiBase ++ "user/signup"
+
+
+userProfile : Config -> String
+userProfile { apiBase } =
+    apiBase ++ "user/profile"
+
+
+userPassword : Config -> String
+userPassword { apiBase } =
+    apiBase ++ "user/password"
+
+
+shoppingCart : Config -> String
+shoppingCart { apiBase } =
+    apiBase ++ "user/shoppingCart"
+
+
+orders : Config -> String
+orders { apiBase } =
     apiBase ++ "orders"
+
+
+order : Config -> Int -> String
+order { apiBase } id =
+    apiBase ++ "orders" ++ "/" ++ String.fromInt id

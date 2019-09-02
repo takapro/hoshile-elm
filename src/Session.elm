@@ -1,6 +1,6 @@
 module Session exposing (Model, Msg(..), init, update)
 
-import Config
+import Config exposing (Config)
 import Entity.CartEntry as CartEntry exposing (CartEntry)
 import Entity.User exposing (User)
 import Json.Decode as Decode
@@ -29,17 +29,17 @@ init =
     Model Nothing []
 
 
-update : Msg -> NavUtil.Model -> Model -> (Msg -> msg) -> (Msg -> Cmd msg) -> ( Model, Cmd msg )
-update msg nav model wrapMsg sessionCmd =
+update : Msg -> Config -> Model -> (Msg -> msg) -> (Msg -> Cmd msg) -> ( Model, Cmd msg )
+update msg config model wrapMsg sessionCmd =
     case msg of
         Login user path ->
             ( Model (Just user) (mergeCart model.shoppingCart user.shoppingCart)
-            , Cmd.batch [ NavUtil.push nav path, sessionCmd UpdateCart ]
+            , Cmd.batch [ NavUtil.push config.nav path, sessionCmd UpdateCart ]
             )
 
         Logout path ->
             ( { model | user = Nothing, shoppingCart = [] }
-            , NavUtil.replace nav path
+            , NavUtil.replace config.nav path
             )
 
         Update user ->
@@ -47,21 +47,21 @@ update msg nav model wrapMsg sessionCmd =
 
         MergeCart cart maybePath ->
             ( { model | shoppingCart = CartEntry.mergeCart model.shoppingCart cart }
-            , Cmd.batch [ pushCmd nav maybePath, sessionCmd UpdateCart ]
+            , Cmd.batch [ pushCmd config maybePath, sessionCmd UpdateCart ]
             )
 
         UpdateCart ->
-            ( model, Cmd.map wrapMsg (updateCart model) )
+            ( model, Cmd.map wrapMsg (updateCart config model) )
 
         Receive _ ->
             ( model, Cmd.none )
 
 
-pushCmd : NavUtil.Model -> Maybe String -> Cmd msg
-pushCmd nav maybePath =
+pushCmd : Config -> Maybe String -> Cmd msg
+pushCmd config maybePath =
     case maybePath of
         Just path ->
-            NavUtil.push nav path
+            NavUtil.push config.nav path
 
         _ ->
             Cmd.none
@@ -77,11 +77,11 @@ mergeCart shoppingCart json =
             shoppingCart
 
 
-updateCart : Model -> Cmd Msg
-updateCart { user, shoppingCart } =
+updateCart : Config -> Model -> Cmd Msg
+updateCart config { user, shoppingCart } =
     case user of
         Just { token } ->
-            Fetch.putWithToken Receive Decode.bool token (Config.userApi ++ "/shoppingCart") <|
+            Fetch.putWithToken Receive Decode.bool token (Config.shoppingCart config) <|
                 let
                     json =
                         Encode.encode 0 (CartEntry.encodeCart shoppingCart)

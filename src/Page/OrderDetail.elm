@@ -2,7 +2,7 @@ module Page.OrderDetail exposing (Model, Msg, init, update, view)
 
 import Bootstrap.Grid as Grid
 import Bootstrap.Table as Table exposing (cellAttr)
-import Config
+import Config exposing (Config)
 import Entity.Order as Order exposing (OrderDetail, OrderHead)
 import Html exposing (Html, h3, img, p, text)
 import Html.Attributes exposing (class, colspan, src)
@@ -19,12 +19,12 @@ type Msg
     = Receive (FetchState OrderHead)
 
 
-init : Session.Model -> Int -> ( Model, Cmd Msg )
-init { user } id =
+init : Config -> Session.Model -> Int -> ( Model, Cmd Msg )
+init config { user } id =
     case user of
         Just { token } ->
             ( Just Loading
-            , Fetch.getWithToken Receive Order.decoder token (Config.orderApi ++ "/" ++ String.fromInt id)
+            , Fetch.getWithToken Receive Order.decoder token (Config.order config id)
             )
 
         Nothing ->
