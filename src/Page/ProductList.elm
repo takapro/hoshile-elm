@@ -5,11 +5,12 @@ import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
-import Config exposing (Config)
 import Entity.Product as Product exposing (Product)
 import Html exposing (Html, div, h4, h6, text)
 import Html.Attributes exposing (class, src)
 import Json.Decode as Decode
+import Return exposing (Return, return, withCmd)
+import Shared exposing (Shared)
 import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.NavUtil exposing (href)
@@ -24,35 +25,34 @@ type Msg
     = Receive (FetchState (List Product))
 
 
-init : Config -> ( Model, Cmd Msg )
-init config =
-    ( Loading
-    , Fetch.get Receive (Decode.list Product.decoder) (Api.products config)
-    )
+init : Shared t -> Return Model Msg msg
+init { config } =
+    return Loading
+        |> withCmd (Fetch.get Receive (Decode.list Product.decoder) (Api.products config))
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg _ =
+update : Msg -> Shared t -> Model -> Return Model Msg msg
+update msg _ _ =
     case msg of
         Receive fetchState ->
-            ( fetchState, Cmd.none )
+            return fetchState
 
 
-view : Config -> Model -> Html Msg
-view config model =
+view : Shared t -> Model -> Html Msg
+view shared model =
     Grid.container [ class "py-4" ]
         (CustomAlert.fetchState "Fetch" model <|
             \products ->
                 [ Grid.row []
                     (products
-                        |> List.map (\product -> Grid.col [ Col.md4 ] [ productCard config product ])
+                        |> List.map (\product -> Grid.col [ Col.md4 ] [ productCard shared product ])
                     )
                 ]
         )
 
 
-productCard : Config -> Product -> Html msg
-productCard { nav } product =
+productCard : Shared t -> Product -> Html msg
+productCard { config } product =
     Card.config [ Card.attrs [ class "mb-3" ] ]
         |> Card.imgTop [ src product.imageUrl, class "img-fluid" ] []
         |> Card.block
@@ -66,7 +66,7 @@ productCard { nav } product =
                 Button.linkButton
                     [ Button.secondary
                     , Button.attrs
-                        [ href nav ("/product/" ++ String.fromInt product.id)
+                        [ href config.nav ("/product/" ++ String.fromInt product.id)
                         , class "stretched-link"
                         ]
                     ]

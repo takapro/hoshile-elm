@@ -5,6 +5,7 @@ import Entity.CartEntry as CartEntry exposing (CartEntry)
 import Entity.User exposing (User)
 import Json.Decode as Decode
 import Json.Encode as Encode
+import Return exposing (Return, return, withCmd, withSessionMsg)
 import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.NavUtil as NavUtil
@@ -30,32 +31,32 @@ init =
     Session Nothing []
 
 
-update : Msg -> Config -> Session -> (Msg -> msg) -> (Msg -> Cmd msg) -> ( Session, Cmd msg )
-update msg config session wrapMsg sessionCmd =
+update : Msg -> Config -> Session -> Return Session Msg Msg
+update msg config session =
     case msg of
         Login user path ->
-            ( Session (Just user) (mergeCart session.shoppingCart user.shoppingCart)
-            , Cmd.batch [ NavUtil.push config.nav path, sessionCmd UpdateCart ]
-            )
+            return (Session (Just user) (mergeCart session.shoppingCart user.shoppingCart))
+                |> withCmd (NavUtil.push config.nav path)
+                |> withSessionMsg UpdateCart
 
         Logout path ->
-            ( { session | user = Nothing, shoppingCart = [] }
-            , NavUtil.replace config.nav path
-            )
+            return { session | user = Nothing, shoppingCart = [] }
+                |> withCmd (NavUtil.replace config.nav path)
 
         Update user ->
-            ( { session | user = Just user }, Cmd.none )
+            return { session | user = Just user }
 
         MergeCart cart maybePath ->
-            ( { session | shoppingCart = CartEntry.mergeCart session.shoppingCart cart }
-            , Cmd.batch [ pushCmd config maybePath, sessionCmd UpdateCart ]
-            )
+            return { session | shoppingCart = CartEntry.mergeCart session.shoppingCart cart }
+                |> withCmd (pushCmd config maybePath)
+                |> withSessionMsg UpdateCart
 
         UpdateCart ->
-            ( session, Cmd.map wrapMsg (updateCart config session) )
+            return session
+                |> withCmd (updateCart config session)
 
         Receive _ ->
-            ( session, Cmd.none )
+            return session
 
 
 pushCmd : Config -> Maybe String -> Cmd msg

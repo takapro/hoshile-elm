@@ -1,17 +1,17 @@
 module View.Header exposing (view)
 
 import Bootstrap.Grid as Grid
-import Config exposing (Config)
 import Html exposing (Html, a, h1, header, text)
 import Html.Attributes exposing (class)
+import Shared exposing (Shared)
 import Util.NavUtil exposing (href)
 
 
-view : Config -> Html msg
-view { title, nav } =
+view : Shared t -> Html msg
+view { config } =
     header [ class "py-4" ]
         [ Grid.container [ class "text-center" ]
             [ h1 []
-                [ a [ href nav "/" ] [ text (title ++ " (Elm)") ] ]
+                [ a [ href config.nav "/" ] [ text (config.title ++ " (Elm)") ] ]
             ]
         ]

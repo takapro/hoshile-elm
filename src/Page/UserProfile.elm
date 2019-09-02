@@ -6,12 +6,13 @@ import Bootstrap.Form.Input as Input exposing (onInput, value)
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
-import Config exposing (Config)
 import Entity.User as User exposing (User)
 import Html exposing (Html, h3, hr, text)
 import Html.Attributes exposing (class)
 import Json.Encode as Encode
-import Session exposing (Session)
+import Return exposing (Return, return, withCmd, withSessionMsg)
+import Session
+import Shared exposing (Shared)
 import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
@@ -19,8 +20,7 @@ import View.CustomAlert as CustomAlert
 
 
 type alias Model =
-    { token : Maybe String
-    , name : String
+    { name : String
     , email : String
     , curPassword : String
     , password1 : String
@@ -42,51 +42,55 @@ type Msg
     | ReceivePassword (FetchState User)
 
 
-init : Session -> ( Model, Cmd Msg )
-init { user } =
-    case user of
-        Just { token, name, email } ->
-            ( Model (Just token) name email "" "" "" Nothing Nothing, Cmd.none )
+init : Shared t -> Return Model Msg msg
+init { session } =
+    case session.user of
+        Just { name, email } ->
+            return (Model name email "" "" "" Nothing Nothing)
 
         Nothing ->
-            ( Model Nothing "" "" "" "" "" Nothing Nothing, Cmd.none )
+            return (Model "" "" "" "" "" Nothing Nothing)
 
 
-update : Msg -> Config -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
-update msg config model wrapMsg sessionCmd =
+update : Msg -> Shared t -> Model -> Return Model Msg Session.Msg
+update msg shared model =
     case msg of
         Name name ->
-            ( { model | name = name }, Cmd.none )
+            return { model | name = name }
 
         Email email ->
-            ( { model | email = email }, Cmd.none )
+            return { model | email = email }
 
         CurPassword curPassword ->
-            ( { model | curPassword = curPassword }, Cmd.none )
+            return { model | curPassword = curPassword }
 
         Password1 password1 ->
-            ( { model | password1 = password1 }, Cmd.none )
+            return { model | password1 = password1 }
 
         Password2 password2 ->
-            ( { model | password2 = password2 }, Cmd.none )
+            return { model | password2 = password2 }
 
         UpdateProfile ->
-            ( { model | profileState = Just Loading }, Cmd.map wrapMsg (profileCmd config model) )
+            return { model | profileState = Just Loading }
+                |> withCmd (profileCmd shared model)
 
         ReceiveProfile (Success user) ->
-            ( { model | profileState = Nothing }, sessionCmd (Session.Update user) )
+            return { model | profileState = Nothing }
+                |> withSessionMsg (Session.Update user)
 
         ReceiveProfile fetchState ->
-            ( { model | profileState = Just fetchState }, Cmd.none )
+            return { model | profileState = Just fetchState }
 
         UpdatePassword ->
-            ( { model | passwordState = Just Loading }, Cmd.map wrapMsg (passwordCmd config model) )
+            return { model | passwordState = Just Loading }
+                |> withCmd (passwordCmd shared model)
 
         ReceivePassword (Success user) ->
-            ( { model | passwordState = Nothing }, sessionCmd (Session.Update user) )
+            return { model | passwordState = Nothing }
+                |> withSessionMsg (Session.Update user)
 
         ReceivePassword fetchState ->
-            ( { model | passwordState = Just fetchState }, Cmd.none )
+            return { model | passwordState = Just fetchState }
 
 
 cantUpdateProfile : Model -> Bool
@@ -99,38 +103,38 @@ cantUpdatePassword { curPassword, password1, password2, passwordState } =
     curPassword == "" || password1 == "" || password1 /= password2 || passwordState == Just Loading
 
 
-profileCmd : Config -> Model -> Cmd Msg
-profileCmd config model =
-    case model.token of
-        Just token ->
+profileCmd : Shared t -> Model -> Cmd Msg
+profileCmd { config, session } { name, email } =
+    case session.user of
+        Just { token } ->
             Fetch.putWithToken ReceiveProfile User.decoder token (Api.user config "profile") <|
                 Encode.object
-                    [ ( "name", Encode.string model.name )
-                    , ( "email", Encode.string model.email )
+                    [ ( "name", Encode.string name )
+                    , ( "email", Encode.string email )
                     ]
 
         Nothing ->
             Cmd.none
 
 
-passwordCmd : Config -> Model -> Cmd Msg
-passwordCmd config model =
-    case model.token of
-        Just token ->
+passwordCmd : Shared t -> Model -> Cmd Msg
+passwordCmd { config, session } { curPassword, password1 } =
+    case session.user of
+        Just { token } ->
             Fetch.putWithToken ReceivePassword User.decoder token (Api.user config "password") <|
                 Encode.object
-                    [ ( "curPassword", Encode.string model.curPassword )
-                    , ( "newPassword", Encode.string model.password1 )
+                    [ ( "curPassword", Encode.string curPassword )
+                    , ( "newPassword", Encode.string password1 )
                     ]
 
         Nothing ->
             Cmd.none
 
 
-view : Model -> Html Msg
-view model =
+view : Shared t -> Model -> Html Msg
+view { session } model =
     Grid.container [ class "py-4" ]
-        (if model.token == Nothing then
+        (if session.user == Nothing then
             [ CustomAlert.error "Not logged in." ]
 
          else

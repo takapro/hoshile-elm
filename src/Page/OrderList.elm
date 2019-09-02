@@ -2,13 +2,13 @@ module Page.OrderList exposing (Model, Msg, init, update, view)
 
 import Bootstrap.Grid as Grid
 import Bootstrap.Table as Table exposing (rowAttr)
-import Config exposing (Config)
 import Entity.Order as Order exposing (OrderHead)
 import Html exposing (Html, h3, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode
-import Session exposing (Session)
+import Return exposing (Return, return, withCmd)
+import Shared exposing (Shared)
 import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.NavUtil as NavUtil
@@ -24,30 +24,30 @@ type Msg
     | Detail Int
 
 
-init : Config -> Session -> ( Model, Cmd Msg )
-init config { user } =
-    case user of
+init : Shared t -> Return Model Msg msg
+init { config, session } =
+    case session.user of
         Just { token } ->
-            ( Just Loading
-            , Fetch.getWithToken Receive (Decode.list Order.decoder) token (Api.orders config)
-            )
+            return (Just Loading)
+                |> withCmd (Fetch.getWithToken Receive (Decode.list Order.decoder) token (Api.orders config))
 
         Nothing ->
-            ( Nothing, Cmd.none )
+            return Nothing
 
 
-update : Msg -> Config -> Model -> ( Model, Cmd Msg )
-update msg config model =
+update : Msg -> Shared t -> Model -> Return Model Msg msg
+update msg { config } model =
     case msg of
         Receive fetchState ->
-            ( Just fetchState, Cmd.none )
+            return (Just fetchState)
 
         Detail id ->
-            ( model, NavUtil.push config.nav ("/order/" ++ String.fromInt id) )
+            return model
+                |> withCmd (NavUtil.push config.nav ("/order/" ++ String.fromInt id))
 
 
-view : Model -> Html Msg
-view model =
+view : Shared t -> Model -> Html Msg
+view _ model =
     Grid.container [ class "py-4" ]
         (CustomAlert.maybeFetchState "Not logged in." "Fetch" model <|
             \orders ->
