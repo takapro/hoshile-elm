@@ -15,8 +15,9 @@ import Page.ShoppingCart
 import Page.UserLogin
 import Page.UserProfile
 import Page.UserSignup
+import Return exposing (Return, mapEffects)
 import Route exposing (Route)
-import Session
+import Session exposing (Session)
 import Shared exposing (Shared)
 import Task
 import Url exposing (Url)
@@ -95,12 +96,6 @@ subscriptions model =
     Navbar.subscriptions model.navState NavMsg
 
 
-sessionCmd : Session.Msg -> Cmd Msg
-sessionCmd msg =
-    Task.succeed (SessionMsg msg)
-        |> Task.perform identity
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -114,8 +109,8 @@ update msg model =
             ( model, Nav.load href )
 
         SessionMsg sessionMsg ->
-            Session.update sessionMsg model.config model.session SessionMsg sessionCmd
-                |> Tuple.mapFirst (\session -> { model | session = session })
+            Session.update sessionMsg model.config model.session
+                |> mapSession model
 
         NavMsg state ->
             ( { model | navState = state }, Cmd.none )
@@ -132,8 +127,8 @@ update msg model =
         ProductDetailMsg pageMsg ->
             case model.page of
                 ProductDetail page ->
-                    Page.ProductDetail.update pageMsg model page ProductDetailMsg sessionCmd
-                        |> mapPage model ProductDetail identity
+                    Page.ProductDetail.update pageMsg model page
+                        |> mapPage model ProductDetail ProductDetailMsg
 
                 _ ->
                     ( model, Cmd.none )
@@ -141,8 +136,8 @@ update msg model =
         UserLoginMsg pageMsg ->
             case model.page of
                 UserLogin page ->
-                    Page.UserLogin.update pageMsg model page UserLoginMsg sessionCmd
-                        |> mapPage model UserLogin identity
+                    Page.UserLogin.update pageMsg model page
+                        |> mapPage model UserLogin UserLoginMsg
 
                 _ ->
                     ( model, Cmd.none )
@@ -150,8 +145,8 @@ update msg model =
         UserSignupMsg pageMsg ->
             case model.page of
                 UserSignup page ->
-                    Page.UserSignup.update pageMsg model page UserSignupMsg sessionCmd
-                        |> mapPage model UserSignup identity
+                    Page.UserSignup.update pageMsg model page
+                        |> mapPage model UserSignup UserSignupMsg
 
                 _ ->
                     ( model, Cmd.none )
@@ -159,8 +154,8 @@ update msg model =
         UserProfileMsg pageMsg ->
             case model.page of
                 UserProfile page ->
-                    Page.UserProfile.update pageMsg model page UserProfileMsg sessionCmd
-                        |> mapPage model UserProfile identity
+                    Page.UserProfile.update pageMsg model page
+                        |> mapPage model UserProfile UserProfileMsg
 
                 _ ->
                     ( model, Cmd.none )
@@ -168,8 +163,8 @@ update msg model =
         ShoppingCartMsg pageMsg ->
             case model.page of
                 ShoppingCart page ->
-                    Page.ShoppingCart.update pageMsg model page ShoppingCartMsg sessionCmd
-                        |> mapPage model ShoppingCart identity
+                    Page.ShoppingCart.update pageMsg model page
+                        |> mapPage model ShoppingCart ShoppingCartMsg
 
                 _ ->
                     ( model, Cmd.none )
@@ -238,9 +233,24 @@ goTo route model =
                 |> mapPage model OrderDetail OrderDetailMsg
 
 
-mapPage : Model -> (page -> Page) -> (msg -> Msg) -> ( page, Cmd msg ) -> ( Model, Cmd Msg )
-mapPage model pageConstructor msgConstructor =
-    Tuple.mapBoth (\pageModel -> { model | page = pageConstructor pageModel }) (Cmd.map msgConstructor)
+sessionCmd : Session.Msg -> Cmd Msg
+sessionCmd msg =
+    Task.succeed (SessionMsg msg)
+        |> Task.perform identity
+
+
+mapSession : Model -> Return Session Session.Msg Session.Msg -> ( Model, Cmd Msg )
+mapSession model ret =
+    ( { model | session = ret.model }
+    , mapEffects SessionMsg sessionCmd ret.effects
+    )
+
+
+mapPage : Model -> (page -> Page) -> (msg -> Msg) -> Return page msg Session.Msg -> ( Model, Cmd Msg )
+mapPage model toPage toMsg ret =
+    ( { model | page = toPage ret.model }
+    , mapEffects toMsg sessionCmd ret.effects
+    )
 
 
 view : Model -> Browser.Document Msg

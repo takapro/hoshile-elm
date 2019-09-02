@@ -5,6 +5,7 @@ import Bootstrap.Table as Table exposing (cellAttr)
 import Entity.Order as Order exposing (OrderDetail, OrderHead)
 import Html exposing (Html, h3, img, p, text)
 import Html.Attributes exposing (class, colspan, src)
+import Return exposing (Return, return, withCmd)
 import Shared exposing (Shared)
 import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
@@ -19,27 +20,26 @@ type Msg
     = Receive (FetchState OrderHead)
 
 
-init : Shared t -> Int -> ( Model, Cmd Msg )
-init shared id =
-    case shared.session.user of
+init : Shared t -> Int -> Return Model Msg msg
+init { config, session } id =
+    case session.user of
         Just { token } ->
-            ( Just Loading
-            , Fetch.getWithToken Receive Order.decoder token (Api.order shared.config id)
-            )
+            return (Just Loading)
+                |> withCmd (Fetch.getWithToken Receive Order.decoder token (Api.order config id))
 
         Nothing ->
-            ( Nothing, Cmd.none )
+            return Nothing
 
 
-update : Msg -> Shared t -> Model -> ( Model, Cmd Msg )
-update msg shared model =
+update : Msg -> Shared t -> Model -> Return Model Msg msg
+update msg _ _ =
     case msg of
         Receive fetchState ->
-            ( Just fetchState, Cmd.none )
+            return (Just fetchState)
 
 
 view : Shared t -> Model -> Html Msg
-view shared model =
+view _ model =
     Grid.container [ class "py-4" ]
         (CustomAlert.maybeFetchState "Not logged in." "Fetch" model <|
             \order ->

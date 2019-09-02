@@ -10,6 +10,7 @@ import Entity.User as User exposing (User)
 import Html exposing (Html, a, h3, text)
 import Html.Attributes exposing (autofocus, class)
 import Json.Encode as Encode
+import Return exposing (Return, return, withCmd, withSessionMsg)
 import Session
 import Shared exposing (Shared)
 import Util.Api as Api
@@ -38,34 +39,36 @@ type Msg
     | Receive (FetchState User)
 
 
-init : Shared t -> Maybe String -> ( Model, Cmd Msg )
-init shared forPurchase =
-    ( Model (forPurchase == Just "true") "" "" "" "" Nothing, Cmd.none )
+init : Shared t -> Maybe String -> Return Model Msg msg
+init _ forPurchase =
+    return (Model (forPurchase == Just "true") "" "" "" "" Nothing)
 
 
-update : Msg -> Shared t -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
-update msg shared model wrapMsg sessionCmd =
+update : Msg -> Shared t -> Model -> Return Model Msg Session.Msg
+update msg shared model =
     case msg of
         Name name ->
-            ( { model | name = name }, Cmd.none )
+            return { model | name = name }
 
         Email email ->
-            ( { model | email = email }, Cmd.none )
+            return { model | email = email }
 
         Password1 password1 ->
-            ( { model | password1 = password1 }, Cmd.none )
+            return { model | password1 = password1 }
 
         Password2 password2 ->
-            ( { model | password2 = password2 }, Cmd.none )
+            return { model | password2 = password2 }
 
         Signup ->
-            ( { model | signupState = Just Loading }, Cmd.map wrapMsg (signupCmd shared model) )
+            return { model | signupState = Just Loading }
+                |> withCmd (signupCmd shared model)
 
         Receive (Success user) ->
-            ( model, sessionCmd (Session.Login user (linkPath model "/" "/shoppingCart")) )
+            return model
+                |> withSessionMsg (Session.Login user (linkPath model "/" "/shoppingCart"))
 
         Receive fetchState ->
-            ( { model | signupState = Just fetchState }, Cmd.none )
+            return { model | signupState = Just fetchState }
 
 
 linkPath : Model -> String -> String -> String
@@ -83,8 +86,8 @@ cantSignup { name, email, password1, password2, signupState } =
 
 
 signupCmd : Shared t -> Model -> Cmd Msg
-signupCmd shared { name, email, password1 } =
-    Fetch.post Receive User.decoder (Api.user shared.config "signup") <|
+signupCmd { config } { name, email, password1 } =
+    Fetch.post Receive User.decoder (Api.user config "signup") <|
         Encode.object
             [ ( "name", Encode.string name )
             , ( "email", Encode.string email )
@@ -93,14 +96,14 @@ signupCmd shared { name, email, password1 } =
 
 
 view : Shared t -> Model -> Html Msg
-view shared model =
+view { config } model =
     Grid.container [ class "py-4" ]
         [ Grid.row [ Row.attrs [ class "justify-content-center" ] ]
             [ Grid.col [ Col.md6 ]
                 (ListUtil.append3
                     [ h3 [ class "mb-3" ]
                         [ text "Please Sign up, or "
-                        , a [ href shared.config.nav (linkPath model "/login" "/login?forPurchase=true") ] [ text "Log in" ]
+                        , a [ href config.nav (linkPath model "/login" "/login?forPurchase=true") ] [ text "Log in" ]
                         ]
                     ]
                     (CustomAlert.errorIfFailure "Signup" model.signupState)

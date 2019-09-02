@@ -7,6 +7,7 @@ import Html exposing (Html, h3, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode
+import Return exposing (Return, return, withCmd)
 import Shared exposing (Shared)
 import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
@@ -23,30 +24,30 @@ type Msg
     | Detail Int
 
 
-init : Shared t -> ( Model, Cmd Msg )
-init shared =
-    case shared.session.user of
+init : Shared t -> Return Model Msg msg
+init { config, session } =
+    case session.user of
         Just { token } ->
-            ( Just Loading
-            , Fetch.getWithToken Receive (Decode.list Order.decoder) token (Api.orders shared.config)
-            )
+            return (Just Loading)
+                |> withCmd (Fetch.getWithToken Receive (Decode.list Order.decoder) token (Api.orders config))
 
         Nothing ->
-            ( Nothing, Cmd.none )
+            return Nothing
 
 
-update : Msg -> Shared t -> Model -> ( Model, Cmd Msg )
-update msg shared model =
+update : Msg -> Shared t -> Model -> Return Model Msg msg
+update msg { config } model =
     case msg of
         Receive fetchState ->
-            ( Just fetchState, Cmd.none )
+            return (Just fetchState)
 
         Detail id ->
-            ( model, NavUtil.push shared.config.nav ("/order/" ++ String.fromInt id) )
+            return model
+                |> withCmd (NavUtil.push config.nav ("/order/" ++ String.fromInt id))
 
 
 view : Shared t -> Model -> Html Msg
-view shared model =
+view _ model =
     Grid.container [ class "py-4" ]
         (CustomAlert.maybeFetchState "Not logged in." "Fetch" model <|
             \orders ->

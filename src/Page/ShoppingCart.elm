@@ -8,6 +8,7 @@ import Entity.Product as Product exposing (Product)
 import Html exposing (Html, div, h3, img, span, text)
 import Html.Attributes exposing (class, colspan, src)
 import Json.Decode as Decode
+import Return exposing (Return, return, withCmd, withSessionMsg)
 import Session
 import Shared exposing (Shared)
 import Util.Api as Api
@@ -30,60 +31,61 @@ type Msg
     | ReceivePurchase (FetchState Int)
 
 
-init : Shared t -> ( Model, Cmd Msg )
-init shared =
-    ( Model Loading Nothing
-    , Fetch.get Receive (Decode.list Product.decoder) (Api.products shared.config)
-    )
+init : Shared t -> Return Model Msg msg
+init { config } =
+    return (Model Loading Nothing)
+        |> withCmd (Fetch.get Receive (Decode.list Product.decoder) (Api.products config))
 
 
-update : Msg -> Shared t -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
-update msg shared model wrapMsg sessionCmd =
+update : Msg -> Shared t -> Model -> Return Model Msg Session.Msg
+update msg ({ config, session } as shared) model =
     case msg of
         Receive fetchState ->
-            ( { model | fetchState = fetchState }, Cmd.none )
+            return { model | fetchState = fetchState }
 
         Quantity id delta ->
-            ( model, sessionCmd (Session.MergeCart [ CartEntry id delta ] Nothing) )
+            return model
+                |> withSessionMsg (Session.MergeCart [ CartEntry id delta ] Nothing)
 
         Purchase ->
-            case shared.session.user of
+            case session.user of
                 Just { token } ->
-                    ( { model | purchaseState = Just Loading }
-                    , Cmd.map wrapMsg (purchaseCmd shared token)
-                    )
+                    return { model | purchaseState = Just Loading }
+                        |> withCmd (purchaseCmd shared token)
 
                 Nothing ->
-                    ( model, NavUtil.push shared.config.nav "/login?forPurchase=true" )
+                    return model
+                        |> withCmd (NavUtil.push config.nav "/login?forPurchase=true")
 
         ReceivePurchase (Success orderId) ->
-            ( model, NavUtil.push shared.config.nav ("/orders/" ++ String.fromInt orderId) )
+            return model
+                |> withCmd (NavUtil.push config.nav ("/orders/" ++ String.fromInt orderId))
 
         ReceivePurchase purchaseState ->
-            ( { model | purchaseState = Just purchaseState }, Cmd.none )
+            return { model | purchaseState = Just purchaseState }
 
 
 cantPurchase : Shared t -> Bool
-cantPurchase shared =
-    shared.session.user /= Nothing && shared.session.shoppingCart == []
+cantPurchase { session } =
+    session.user /= Nothing && session.shoppingCart == []
 
 
 purchaseCmd : Shared t -> String -> Cmd Msg
-purchaseCmd shared token =
-    Fetch.postWithToken ReceivePurchase Decode.int token (Api.orders shared.config) <|
-        CartEntry.encodeCart shared.session.shoppingCart
+purchaseCmd { config, session } token =
+    Fetch.postWithToken ReceivePurchase Decode.int token (Api.orders config) <|
+        CartEntry.encodeCart session.shoppingCart
 
 
 view : Shared t -> Model -> Html Msg
-view shared model =
+view ({ session } as shared) model =
     Grid.container [ class "py-4" ]
         (CustomAlert.fetchState "Fetch" model.fetchState <|
-            \products -> cartView shared model (CartEntry.joinProducts shared.session.shoppingCart products)
+            \products -> cartView shared model (CartEntry.joinProducts session.shoppingCart products)
         )
 
 
 cartView : Shared t -> Model -> List DetailEntry -> List (Html Msg)
-cartView shared model entries =
+cartView ({ session } as shared) model entries =
     ListUtil.append3
         [ h3 [ class "mb-3" ] [ text "Shopping Cart" ]
         ]
@@ -93,7 +95,7 @@ cartView shared model entries =
             [ Button.button
                 [ primary, large, attrs [ class "w-25" ], onClick Purchase, disabled (cantPurchase shared) ]
                 (CustomAlert.spinnerLabel model.purchaseState <|
-                    if shared.session.user /= Nothing then
+                    if session.user /= Nothing then
                         "Purchase"
 
                     else

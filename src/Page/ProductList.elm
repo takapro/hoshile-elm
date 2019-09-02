@@ -9,6 +9,7 @@ import Entity.Product as Product exposing (Product)
 import Html exposing (Html, div, h4, h6, text)
 import Html.Attributes exposing (class, src)
 import Json.Decode as Decode
+import Return exposing (Return, return, withCmd)
 import Shared exposing (Shared)
 import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
@@ -24,18 +25,17 @@ type Msg
     = Receive (FetchState (List Product))
 
 
-init : Shared t -> ( Model, Cmd Msg )
-init shared =
-    ( Loading
-    , Fetch.get Receive (Decode.list Product.decoder) (Api.products shared.config)
-    )
+init : Shared t -> Return Model Msg msg
+init { config } =
+    return Loading
+        |> withCmd (Fetch.get Receive (Decode.list Product.decoder) (Api.products config))
 
 
-update : Msg -> Shared t -> Model -> ( Model, Cmd Msg )
-update msg shared model =
+update : Msg -> Shared t -> Model -> Return Model Msg msg
+update msg _ _ =
     case msg of
         Receive fetchState ->
-            ( fetchState, Cmd.none )
+            return fetchState
 
 
 view : Shared t -> Model -> Html Msg

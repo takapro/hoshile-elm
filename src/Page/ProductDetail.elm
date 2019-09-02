@@ -7,6 +7,7 @@ import Entity.CartEntry exposing (CartEntry)
 import Entity.Product as Product exposing (Product)
 import Html exposing (Html, h4, h6, img, p, text)
 import Html.Attributes exposing (class, src)
+import Return exposing (Return, return, withCmd, withSessionMsg)
 import Session
 import Shared exposing (Shared)
 import Util.Api as Api
@@ -23,21 +24,21 @@ type Msg
     | AddToCart Int
 
 
-init : Shared t -> Int -> ( Model, Cmd Msg )
-init shared id =
-    ( Loading
-    , Fetch.get Receive Product.decoder (Api.product shared.config id)
-    )
+init : Shared t -> Int -> Return Model Msg msg
+init { config } id =
+    return Loading
+        |> withCmd (Fetch.get Receive Product.decoder (Api.product config id))
 
 
-update : Msg -> Shared t -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
-update msg shared model _ sessionCmd =
+update : Msg -> Shared t -> Model -> Return Model Msg Session.Msg
+update msg _ model =
     case msg of
         Receive fetchState ->
-            ( fetchState, Cmd.none )
+            return fetchState
 
         AddToCart id ->
-            ( model, sessionCmd (Session.MergeCart [ CartEntry id 1 ] (Just "/shoppingCart")) )
+            return model
+                |> withSessionMsg (Session.MergeCart [ CartEntry id 1 ] (Just "/shoppingCart"))
 
 
 title : Model -> String -> String
@@ -51,7 +52,7 @@ title model defaultTitle =
 
 
 view : Shared t -> Model -> Html Msg
-view shared model =
+view _ model =
     Grid.container [ class "py-4" ]
         (CustomAlert.fetchState "Fetch" model <|
             \product -> [ Grid.row [] (productView product) ]

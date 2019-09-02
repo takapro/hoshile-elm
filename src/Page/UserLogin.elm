@@ -10,6 +10,7 @@ import Entity.User as User exposing (User)
 import Html exposing (Html, a, h3, text)
 import Html.Attributes exposing (autofocus, class)
 import Json.Encode as Encode
+import Return exposing (Return, return, withCmd, withSessionMsg)
 import Session
 import Shared exposing (Shared)
 import Util.Api as Api
@@ -34,28 +35,30 @@ type Msg
     | Receive (FetchState User)
 
 
-init : Shared t -> Maybe String -> ( Model, Cmd Msg )
-init shared forPurchase =
-    ( Model (forPurchase == Just "true") "" "" Nothing, Cmd.none )
+init : Shared t -> Maybe String -> Return Model Msg msg
+init _ forPurchase =
+    return (Model (forPurchase == Just "true") "" "" Nothing)
 
 
-update : Msg -> Shared t -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
-update msg shared model wrapMsg sessionCmd =
+update : Msg -> Shared t -> Model -> Return Model Msg Session.Msg
+update msg shared model =
     case msg of
         Email email ->
-            ( { model | email = email }, Cmd.none )
+            return { model | email = email }
 
         Password password ->
-            ( { model | password = password }, Cmd.none )
+            return { model | password = password }
 
         Login ->
-            ( { model | loginState = Just Loading }, Cmd.map wrapMsg (loginCmd shared model) )
+            return { model | loginState = Just Loading }
+                |> withCmd (loginCmd shared model)
 
         Receive (Success user) ->
-            ( model, sessionCmd (Session.Login user (linkPath model "/" "/shoppingCart")) )
+            return model
+                |> withSessionMsg (Session.Login user (linkPath model "/" "/shoppingCart"))
 
         Receive fetchState ->
-            ( { model | loginState = Just fetchState }, Cmd.none )
+            return { model | loginState = Just fetchState }
 
 
 linkPath : Model -> String -> String -> String
@@ -73,8 +76,8 @@ cantLogin { email, password, loginState } =
 
 
 loginCmd : Shared t -> Model -> Cmd Msg
-loginCmd shared { email, password } =
-    Fetch.post Receive User.decoder (Api.user shared.config "login") <|
+loginCmd { config } { email, password } =
+    Fetch.post Receive User.decoder (Api.user config "login") <|
         Encode.object
             [ ( "email", Encode.string email )
             , ( "password", Encode.string password )
@@ -82,14 +85,14 @@ loginCmd shared { email, password } =
 
 
 view : Shared t -> Model -> Html Msg
-view shared model =
+view { config } model =
     Grid.container [ class "py-4" ]
         [ Grid.row [ Row.attrs [ class "justify-content-center" ] ]
             [ Grid.col [ Col.md6 ]
                 (ListUtil.append3
                     [ h3 [ class "mb-3" ]
                         [ text "Please Log in, or "
-                        , a [ href shared.config.nav (linkPath model "/signup" "/signup?forPurchase=true") ] [ text "Sign up" ]
+                        , a [ href config.nav (linkPath model "/signup" "/signup?forPurchase=true") ] [ text "Sign up" ]
                         ]
                     ]
                     (CustomAlert.errorIfFailure "Login" model.loginState)
