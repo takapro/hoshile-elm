@@ -6,7 +6,7 @@ import Config exposing (Config)
 import Entity.Order as Order exposing (OrderDetail, OrderHead)
 import Html exposing (Html, h3, img, p, text)
 import Html.Attributes exposing (class, colspan, src)
-import Session
+import Session exposing (Session)
 import Util.Fetch as Fetch exposing (FetchState(..))
 import View.CustomAlert as CustomAlert
 
@@ -19,7 +19,7 @@ type Msg
     = Receive (FetchState OrderHead)
 
 
-init : Config -> Session.Model -> Int -> ( Model, Cmd Msg )
+init : Config -> Session -> Int -> ( Model, Cmd Msg )
 init config { user } id =
     case user of
         Just { token } ->

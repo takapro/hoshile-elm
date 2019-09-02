@@ -16,7 +16,7 @@ import Page.UserLogin
 import Page.UserProfile
 import Page.UserSignup
 import Route exposing (Route)
-import Session
+import Session exposing (Session)
 import Task
 import Url exposing (Url)
 import Util.NavUtil as NavUtil
@@ -27,7 +27,7 @@ import View.Navigation as Navigation
 
 type alias Model =
     { config : Config
-    , session : Session.Model
+    , session : Session
     , navState : Navbar.State
     , page : Page
     }
@@ -245,47 +245,58 @@ mapPage model pageConstructor msgConstructor =
 
 view : Model -> Browser.Document Msg
 view model =
-    { title = model.config.title
+    let
+        ( title, subView ) =
+            pageView model
+    in
+    { title =
+        if title == "" then
+            model.config.title
+
+        else
+            model.config.title ++ " - " ++ title
     , body =
         [ div []
             [ Header.view model.config
             , Navigation.view model.config model.session model.navState NavMsg
-            , pageView model
+            , subView
             , Footer.view
             ]
         ]
     }
 
 
-pageView : Model -> Html Msg
+pageView : Model -> ( String, Html Msg )
 pageView model =
     case model.page of
         NotFound ->
-            Page.NotFound.view
+            ( "Not Found", Page.NotFound.view )
 
         ProductList page ->
-            Html.map ProductListMsg (Page.ProductList.view model.config page)
+            ( "", Html.map ProductListMsg (Page.ProductList.view model.config page) )
 
         ProductDetail page ->
-            Html.map ProductDetailMsg (Page.ProductDetail.view page)
+            ( Page.ProductDetail.title page "Product Detail"
+            , Html.map ProductDetailMsg (Page.ProductDetail.view page)
+            )
 
         About ->
-            Page.About.view
+            ( "About", Page.About.view )
 
         UserLogin page ->
-            Html.map UserLoginMsg (Page.UserLogin.view model.config page)
+            ( "Log in", Html.map UserLoginMsg (Page.UserLogin.view model.config page) )
 
         UserSignup page ->
-            Html.map UserSignupMsg (Page.UserSignup.view model.config page)
+            ( "Sign up", Html.map UserSignupMsg (Page.UserSignup.view model.config page) )
 
         UserProfile page ->
-            Html.map UserProfileMsg (Page.UserProfile.view page)
+            ( "Profile", Html.map UserProfileMsg (Page.UserProfile.view page) )
 
         ShoppingCart page ->
-            Html.map ShoppingCartMsg (Page.ShoppingCart.view model.session page)
+            ( "Shopping Cart", Html.map ShoppingCartMsg (Page.ShoppingCart.view model.session page) )
 
         OrderList page ->
-            Html.map OrderListMsg (Page.OrderList.view page)
+            ( "Order List", Html.map OrderListMsg (Page.OrderList.view page) )
 
         OrderDetail page ->
-            Html.map OrderDetailMsg (Page.OrderDetail.view page)
+            ( "Order Detail", Html.map OrderDetailMsg (Page.OrderDetail.view page) )

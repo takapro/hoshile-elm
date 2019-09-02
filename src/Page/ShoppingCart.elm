@@ -9,7 +9,7 @@ import Entity.Product as Product exposing (Product)
 import Html exposing (Html, div, h3, img, span, text)
 import Html.Attributes exposing (class, colspan, src)
 import Json.Decode as Decode
-import Session
+import Session exposing (Session)
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
 import Util.NavUtil as NavUtil
@@ -30,14 +30,14 @@ type Msg
     | ReceivePurchase (FetchState Int)
 
 
-init : Config -> Session.Model -> ( Model, Cmd Msg )
+init : Config -> Session -> ( Model, Cmd Msg )
 init config { user } =
     ( Model (Maybe.map .token user) Loading Nothing
     , Fetch.get Receive (Decode.list Product.decoder) (Config.products config)
     )
 
 
-update : Msg -> Config -> Session.Model -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
+update : Msg -> Config -> Session -> Model -> (Msg -> msg) -> (Session.Msg -> Cmd msg) -> ( Model, Cmd msg )
 update msg config { shoppingCart } model wrapMsg sessionCmd =
     case msg of
         Receive fetchState ->
@@ -63,7 +63,7 @@ update msg config { shoppingCart } model wrapMsg sessionCmd =
             ( { model | purchaseState = Just purchaseState }, Cmd.none )
 
 
-cantPurchase : Session.Model -> Model -> Bool
+cantPurchase : Session -> Model -> Bool
 cantPurchase { shoppingCart } { token } =
     token /= Nothing && shoppingCart == []
 
@@ -74,7 +74,7 @@ purchaseCmd config token shoppingCart =
         CartEntry.encodeCart shoppingCart
 
 
-view : Session.Model -> Model -> Html Msg
+view : Session -> Model -> Html Msg
 view session model =
     Grid.container [ class "py-4" ]
         (CustomAlert.fetchState "Fetch" model.fetchState <|
@@ -82,7 +82,7 @@ view session model =
         )
 
 
-cartView : Session.Model -> Model -> List DetailEntry -> List (Html Msg)
+cartView : Session -> Model -> List DetailEntry -> List (Html Msg)
 cartView session model entries =
     ListUtil.append3
         [ h3 [ class "mb-3" ] [ text "Shopping Cart" ]

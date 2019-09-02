@@ -8,7 +8,7 @@ import Html exposing (Html, h3, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode
-import Session
+import Session exposing (Session)
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.NavUtil as NavUtil
 import View.CustomAlert as CustomAlert
@@ -23,7 +23,7 @@ type Msg
     | Detail Int
 
 
-init : Config -> Session.Model -> ( Model, Cmd Msg )
+init : Config -> Session -> ( Model, Cmd Msg )
 init config { user } =
     case user of
         Just { token } ->

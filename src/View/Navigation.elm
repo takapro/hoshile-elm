@@ -5,11 +5,11 @@ import Bootstrap.Navbar as Navbar
 import Config exposing (Config)
 import Html exposing (Html, text)
 import Html.Attributes exposing (class)
-import Session
+import Session exposing (Session)
 import Util.NavUtil exposing (href)
 
 
-view : Config -> Session.Model -> Navbar.State -> (Navbar.State -> msg) -> Html msg
+view : Config -> Session -> Navbar.State -> (Navbar.State -> msg) -> Html msg
 view { title, nav } session navState navMsg =
     Navbar.config navMsg
         |> Navbar.withAnimation

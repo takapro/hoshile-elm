@@ -1,4 +1,4 @@
-module Session exposing (Model, Msg(..), init, update)
+module Session exposing (Msg(..), Session, init, update)
 
 import Config exposing (Config)
 import Entity.CartEntry as CartEntry exposing (CartEntry)
@@ -9,7 +9,7 @@ import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.NavUtil as NavUtil
 
 
-type alias Model =
+type alias Session =
     { user : Maybe User
     , shoppingCart : List CartEntry
     }
@@ -24,37 +24,37 @@ type Msg
     | Receive (FetchState Bool)
 
 
-init : Model
+init : Session
 init =
-    Model Nothing []
+    Session Nothing []
 
 
-update : Msg -> Config -> Model -> (Msg -> msg) -> (Msg -> Cmd msg) -> ( Model, Cmd msg )
-update msg config model wrapMsg sessionCmd =
+update : Msg -> Config -> Session -> (Msg -> msg) -> (Msg -> Cmd msg) -> ( Session, Cmd msg )
+update msg config session wrapMsg sessionCmd =
     case msg of
         Login user path ->
-            ( Model (Just user) (mergeCart model.shoppingCart user.shoppingCart)
+            ( Session (Just user) (mergeCart session.shoppingCart user.shoppingCart)
             , Cmd.batch [ NavUtil.push config.nav path, sessionCmd UpdateCart ]
             )
 
         Logout path ->
-            ( { model | user = Nothing, shoppingCart = [] }
+            ( { session | user = Nothing, shoppingCart = [] }
             , NavUtil.replace config.nav path
             )
 
         Update user ->
-            ( { model | user = Just user }, Cmd.none )
+            ( { session | user = Just user }, Cmd.none )
 
         MergeCart cart maybePath ->
-            ( { model | shoppingCart = CartEntry.mergeCart model.shoppingCart cart }
+            ( { session | shoppingCart = CartEntry.mergeCart session.shoppingCart cart }
             , Cmd.batch [ pushCmd config maybePath, sessionCmd UpdateCart ]
             )
 
         UpdateCart ->
-            ( model, Cmd.map wrapMsg (updateCart config model) )
+            ( session, Cmd.map wrapMsg (updateCart config session) )
 
         Receive _ ->
-            ( model, Cmd.none )
+            ( session, Cmd.none )
 
 
 pushCmd : Config -> Maybe String -> Cmd msg
@@ -77,7 +77,7 @@ mergeCart shoppingCart json =
             shoppingCart
 
 
-updateCart : Config -> Model -> Cmd Msg
+updateCart : Config -> Session -> Cmd Msg
 updateCart config { user, shoppingCart } =
     case user of
         Just { token } ->

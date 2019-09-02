@@ -1,4 +1,4 @@
-module Page.ProductDetail exposing (Model, Msg, init, update, view)
+module Page.ProductDetail exposing (Model, Msg, init, title, update, view)
 
 import Bootstrap.Button as Button exposing (onClick, primary)
 import Bootstrap.Grid as Grid
@@ -37,6 +37,16 @@ update msg model _ sessionCmd =
 
         AddToCart id ->
             ( model, sessionCmd (Session.MergeCart [ CartEntry id 1 ] (Just "/shoppingCart")) )
+
+
+title : Model -> String -> String
+title model defaultTitle =
+    case model of
+        Success product ->
+            product.name
+
+        _ ->
+            defaultTitle
 
 
 view : Model -> Html Msg

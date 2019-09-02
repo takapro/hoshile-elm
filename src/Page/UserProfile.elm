@@ -11,7 +11,7 @@ import Entity.User as User exposing (User)
 import Html exposing (Html, h3, hr, text)
 import Html.Attributes exposing (class)
 import Json.Encode as Encode
-import Session
+import Session exposing (Session)
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
 import View.CustomAlert as CustomAlert
@@ -41,7 +41,7 @@ type Msg
     | ReceivePassword (FetchState User)
 
 
-init : Session.Model -> ( Model, Cmd Msg )
+init : Session -> ( Model, Cmd Msg )
 init { user } =
     case user of
         Just { token, name, email } ->
