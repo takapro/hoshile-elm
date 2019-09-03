@@ -36,12 +36,12 @@ update msg config session =
     case msg of
         Login user path ->
             return (Session (Just user) (mergeCart session.shoppingCart user.shoppingCart))
-                |> withCmd (NavUtil.push config.nav path)
+                |> withCmd (NavUtil.push config path)
                 |> withSessionMsg UpdateCart
 
         Logout path ->
             return { session | user = Nothing, shoppingCart = [] }
-                |> withCmd (NavUtil.replace config.nav path)
+                |> withCmd (NavUtil.replace config path)
 
         Update user ->
             return { session | user = Just user }
@@ -63,7 +63,7 @@ pushCmd : Config -> Maybe String -> Cmd msg
 pushCmd config maybePath =
     case maybePath of
         Just path ->
-            NavUtil.push config.nav path
+            NavUtil.push config path
 
         _ ->
             Cmd.none

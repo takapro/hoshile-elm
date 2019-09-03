@@ -12,6 +12,6 @@ view { config } =
     header [ class "py-4" ]
         [ Grid.container [ class "text-center" ]
             [ h1 []
-                [ a [ href config.nav "/" ] [ text (config.title ++ " (Elm)") ] ]
+                [ a [ href config "/" ] [ text (config.title ++ " (Elm)") ] ]
             ]
         ]

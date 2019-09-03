@@ -81,7 +81,7 @@ init flags url key =
             Navbar.initialState NavMsg
 
         ( model, cmd ) =
-            goTo (NavUtil.parse config.nav url)
+            goTo (NavUtil.parse config url)
                 { config = config
                 , session = Session.init
                 , navState = navState
@@ -97,19 +97,19 @@ subscriptions model =
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update msg ({ config, session } as model) =
     case msg of
         UrlChange url ->
-            goTo (NavUtil.parse model.config.nav url) model
+            goTo (NavUtil.parse config url) model
 
         UrlRequest (Browser.Internal url) ->
-            ( model, Nav.pushUrl model.config.nav.key (Url.toString url) )
+            ( model, Nav.pushUrl config.nav.key (Url.toString url) )
 
         UrlRequest (Browser.External href) ->
             ( model, Nav.load href )
 
         SessionMsg sessionMsg ->
-            Session.update sessionMsg model.config model.session
+            Session.update sessionMsg config session
                 |> mapSession model
 
         NavMsg state ->
@@ -254,17 +254,17 @@ mapPage model toPage toMsg ret =
 
 
 view : Model -> Browser.Document Msg
-view model =
+view ({ config } as model) =
     let
         ( title, content ) =
             pageView model
     in
     { title =
         if title == "" then
-            model.config.title
+            config.title
 
         else
-            model.config.title ++ " - " ++ title
+            config.title ++ " - " ++ title
     , body =
         [ div []
             [ Header.view model

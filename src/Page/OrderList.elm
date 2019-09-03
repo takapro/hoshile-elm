@@ -43,7 +43,7 @@ update msg { config } model =
 
         Detail id ->
             return model
-                |> withCmd (NavUtil.push config.nav ("/order/" ++ String.fromInt id))
+                |> withCmd (NavUtil.push config ("/order/" ++ String.fromInt id))
 
 
 view : Shared t -> Model -> Html Msg

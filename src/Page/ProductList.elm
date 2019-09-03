@@ -66,7 +66,7 @@ productCard { config } product =
                 Button.linkButton
                     [ Button.secondary
                     , Button.attrs
-                        [ href config.nav ("/product/" ++ String.fromInt product.id)
+                        [ href config ("/product/" ++ String.fromInt product.id)
                         , class "stretched-link"
                         ]
                     ]

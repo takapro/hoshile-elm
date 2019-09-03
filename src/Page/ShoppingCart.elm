@@ -55,11 +55,11 @@ update msg ({ config, session } as shared) model =
 
                 Nothing ->
                     return model
-                        |> withCmd (NavUtil.push config.nav "/login?forPurchase=true")
+                        |> withCmd (NavUtil.push config "/login?forPurchase=true")
 
         ReceivePurchase (Success orderId) ->
             return model
-                |> withCmd (NavUtil.push config.nav ("/orders/" ++ String.fromInt orderId))
+                |> withCmd (NavUtil.push config ("/orders/" ++ String.fromInt orderId))
 
         ReceivePurchase purchaseState ->
             return { model | purchaseState = Just purchaseState }

@@ -15,6 +15,10 @@ type alias Model =
     }
 
 
+type alias NavConfig t =
+    { t | nav : Model }
+
+
 init : Nav.Key -> String -> Model
 init key basePath =
     let
@@ -30,21 +34,21 @@ init key basePath =
     Model key path list
 
 
-parse : Model -> Url -> Maybe Route
-parse { baseList } url =
-    Url.Parser.parse (Route.pathParser baseList Route.parser) url
+parse : NavConfig t -> Url -> Maybe Route
+parse { nav } url =
+    Url.Parser.parse (Route.pathParser nav.baseList Route.parser) url
 
 
-href : Model -> String -> Html.Attribute msg
-href { basePath } path =
-    Html.Attributes.href (basePath ++ path)
+href : NavConfig t -> String -> Html.Attribute msg
+href { nav } path =
+    Html.Attributes.href (nav.basePath ++ path)
 
 
-push : Model -> String -> Cmd msg
-push { key, basePath } path =
-    Nav.pushUrl key (basePath ++ path)
+push : NavConfig t -> String -> Cmd msg
+push { nav } path =
+    Nav.pushUrl nav.key (nav.basePath ++ path)
 
 
-replace : Model -> String -> Cmd msg
-replace { key, basePath } path =
-    Nav.replaceUrl key (basePath ++ path)
+replace : NavConfig t -> String -> Cmd msg
+replace { nav } path =
+    Nav.replaceUrl nav.key (nav.basePath ++ path)

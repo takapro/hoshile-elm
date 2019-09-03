@@ -103,7 +103,7 @@ view { config } model =
                 (ListUtil.append3
                     [ h3 [ class "mb-3" ]
                         [ text "Please Sign up, or "
-                        , a [ href config.nav (linkPath model "/login" "/login?forPurchase=true") ] [ text "Log in" ]
+                        , a [ href config (linkPath model "/login" "/login?forPurchase=true") ] [ text "Log in" ]
                         ]
                     ]
                     (CustomAlert.errorIfFailure "Signup" model.signupState)
