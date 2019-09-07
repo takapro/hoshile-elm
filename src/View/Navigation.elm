@@ -8,8 +8,8 @@ import Shared exposing (Shared)
 import Util.NavUtil exposing (href)
 
 
-view : Shared t -> (Navbar.State -> msg) -> Html msg
-view { config, session, navState } navMsg =
+view : Shared t -> Navbar.State -> (Navbar.State -> msg) -> Html msg
+view { config, session } navState navMsg =
     Navbar.config navMsg
         |> Navbar.withAnimation
         |> Navbar.collapseSmall

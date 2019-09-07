@@ -1,4 +1,4 @@
-module App exposing (main)
+module Main exposing (main)
 
 import Bootstrap.Navbar as Navbar
 import Browser
@@ -28,7 +28,10 @@ import View.Navigation as Navigation
 
 
 type alias Model =
-    Shared { page : Page }
+    Shared
+        { page : Page
+        , navState : Navbar.State
+        }
 
 
 type Page
@@ -268,7 +271,7 @@ view ({ config } as model) =
     , body =
         [ div []
             [ Header.view model
-            , Navigation.view model NavMsg
+            , Navigation.view model model.navState NavMsg
             , content
             , Footer.view
             ]
