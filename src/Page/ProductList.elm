@@ -23,6 +23,7 @@ type alias Model =
 
 type Msg
     = Receive (FetchState (List Product))
+    | Reload
 
 
 init : Shared t -> Return Model Msg msg
@@ -32,16 +33,19 @@ init { config } =
 
 
 update : Msg -> Shared t -> Model -> Return Model Msg msg
-update msg _ _ =
+update msg shared _ =
     case msg of
         Receive fetchState ->
             return fetchState
+
+        Reload ->
+            init shared
 
 
 view : Shared t -> Model -> Html Msg
 view shared model =
     Grid.container [ class "py-4" ]
-        (CustomAlert.fetchState "Fetch" model <|
+        (CustomAlert.fetchState "Fetch" model Reload <|
             \products ->
                 [ Grid.row []
                     (products

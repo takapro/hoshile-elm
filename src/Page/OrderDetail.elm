@@ -13,35 +13,41 @@ import View.CustomAlert as CustomAlert
 
 
 type alias Model =
-    Maybe (FetchState OrderHead)
+    { id : Int
+    , fetchState : Maybe (FetchState OrderHead)
+    }
 
 
 type Msg
     = Receive (FetchState OrderHead)
+    | Reload
 
 
 init : Shared t -> Int -> Return Model Msg msg
 init { config, session } id =
     case session.user of
         Just { token } ->
-            return (Just Loading)
+            return (Model id (Just Loading))
                 |> withCmd (Fetch.getWithToken Receive Order.decoder token (Api.order config id))
 
         Nothing ->
-            return Nothing
+            return (Model id Nothing)
 
 
 update : Msg -> Shared t -> Model -> Return Model Msg msg
-update msg _ _ =
+update msg shared model =
     case msg of
         Receive fetchState ->
-            return (Just fetchState)
+            return { model | fetchState = Just fetchState }
+
+        Reload ->
+            init shared model.id
 
 
 view : Shared t -> Model -> Html Msg
 view _ model =
     Grid.container [ class "py-4" ]
-        (CustomAlert.maybeFetchState "Not logged in." "Fetch" model <|
+        (CustomAlert.maybeFetchState "Not logged in." "Fetch" model.fetchState Reload <|
             \order ->
                 [ h3 [ class "mb-3" ] [ text "Order Detail" ]
                 , p [ class "mb-3" ] [ text ("Date: " ++ order.createDate) ]

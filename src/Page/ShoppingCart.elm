@@ -26,6 +26,7 @@ type alias Model =
 
 type Msg
     = Receive (FetchState (List Product))
+    | Reload
     | Quantity Int Int
     | Purchase
     | ReceivePurchase (FetchState Int)
@@ -42,6 +43,9 @@ update msg ({ config, session } as shared) model =
     case msg of
         Receive fetchState ->
             return { model | fetchState = fetchState }
+
+        Reload ->
+            init shared
 
         Quantity id delta ->
             return model
@@ -79,7 +83,7 @@ purchaseCmd { config, session } token =
 view : Shared t -> Model -> Html Msg
 view ({ session } as shared) model =
     Grid.container [ class "py-4" ]
-        (CustomAlert.fetchState "Fetch" model.fetchState <|
+        (CustomAlert.fetchState "Fetch" model.fetchState Reload <|
             \products -> cartView shared model (CartEntry.joinProducts session.shoppingCart products)
         )
 

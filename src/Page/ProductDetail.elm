@@ -17,25 +17,31 @@ import View.CustomAlert as CustomAlert
 
 
 type alias Model =
-    FetchState Product
+    { id : Int
+    , fetchState : FetchState Product
+    }
 
 
 type Msg
     = Receive (FetchState Product)
+    | Reload
     | AddToCart Int
 
 
 init : Shared t -> Int -> Return Model Msg msg
 init { config } id =
-    return Loading
+    return (Model id Loading)
         |> withCmd (Fetch.get Receive Product.decoder (Api.product config id))
 
 
 update : Msg -> Shared t -> Model -> Return Model Msg Session.Msg
-update msg { config } model =
+update msg ({ config } as shared) model =
     case msg of
         Receive fetchState ->
-            return fetchState
+            return { model | fetchState = fetchState }
+
+        Reload ->
+            init shared model.id
 
         AddToCart id ->
             return model
@@ -45,7 +51,7 @@ update msg { config } model =
 
 title : Model -> String -> String
 title model defaultTitle =
-    case model of
+    case model.fetchState of
         Success product ->
             product.name
 
@@ -56,7 +62,7 @@ title model defaultTitle =
 view : Shared t -> Model -> Html Msg
 view _ model =
     Grid.container [ class "py-4" ]
-        (CustomAlert.fetchState "Fetch" model <|
+        (CustomAlert.fetchState "Fetch" model.fetchState Reload <|
             \product -> [ Grid.row [] (productView product) ]
         )
 

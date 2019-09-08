@@ -33,6 +33,7 @@ type alias Model =
 
 type Msg
     = Receive (FetchState User)
+    | Reload
     | Name String
     | Email String
     | CurPassword String
@@ -66,6 +67,9 @@ update msg shared model =
                     , email = user.email
                 }
                 |> withSessionMsg (Session.Update user)
+
+        Reload ->
+            init shared
 
         Receive fetchState ->
             return { model | fetchState = Just fetchState }
@@ -149,7 +153,7 @@ passwordCmd { config, session } { curPassword, password1 } =
 view : Shared t -> Model -> Html Msg
 view _ model =
     Grid.container [ class "py-4" ]
-        (CustomAlert.maybeFetchState "Not logged in." "Fetch" model.fetchState <|
+        (CustomAlert.maybeFetchState "Not logged in." "Fetch" model.fetchState Reload <|
             \_ ->
                 [ Grid.row [ Row.attrs [ class "justify-content-center" ] ]
                     [ Grid.col [ Col.md6 ]

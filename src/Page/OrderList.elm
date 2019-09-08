@@ -21,6 +21,7 @@ type alias Model =
 
 type Msg
     = Receive (FetchState (List OrderHead))
+    | Reload
     | Detail Int
 
 
@@ -36,10 +37,13 @@ init { config, session } =
 
 
 update : Msg -> Shared t -> Model -> Return Model Msg msg
-update msg { config } model =
+update msg ({ config } as shared) model =
     case msg of
         Receive fetchState ->
             return (Just fetchState)
+
+        Reload ->
+            init shared
 
         Detail id ->
             return model
@@ -49,7 +53,7 @@ update msg { config } model =
 view : Shared t -> Model -> Html Msg
 view _ model =
     Grid.container [ class "py-4" ]
-        (CustomAlert.maybeFetchState "Not logged in." "Fetch" model <|
+        (CustomAlert.maybeFetchState "Not logged in." "Fetch" model Reload <|
             \orders ->
                 [ h3 [ class "mb-3" ] [ text "Order History" ]
                 , orderTable orders
