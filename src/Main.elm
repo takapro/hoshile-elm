@@ -192,7 +192,7 @@ update msg ({ config, session } as model) =
 
 
 goTo : Maybe Route -> Model -> ( Model, Cmd Msg )
-goTo route model =
+goTo route ({ config } as model) =
     case route of
         Nothing ->
             ( { model | page = NotFound }, Cmd.none )
@@ -213,7 +213,12 @@ goTo route model =
                 |> mapPage model UserLogin UserLoginMsg
 
         Just Route.Logout ->
-            ( model, sessionCmd (Session.Logout "/") )
+            ( model
+            , Cmd.batch
+                [ sessionCmd Session.Logout
+                , NavUtil.replace config "/"
+                ]
+            )
 
         Just (Route.Signup forPurchase) ->
             Page.UserSignup.init model forPurchase

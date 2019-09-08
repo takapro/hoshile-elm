@@ -45,7 +45,7 @@ update msg ({ config, session } as shared) model =
 
         Quantity id delta ->
             return model
-                |> withSessionMsg (Session.MergeCart [ CartEntry id delta ] Nothing)
+                |> withSessionMsg (Session.MergeCart [ CartEntry id delta ])
 
         Purchase ->
             case session.user of

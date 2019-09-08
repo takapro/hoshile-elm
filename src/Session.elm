@@ -8,7 +8,6 @@ import Json.Encode as Encode
 import Return exposing (Return, return, withCmd, withSessionMsg)
 import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
-import Util.NavUtil as NavUtil
 
 
 type alias Session =
@@ -18,10 +17,10 @@ type alias Session =
 
 
 type Msg
-    = Login User String
-    | Logout String
+    = Login User
+    | Logout
     | Update User
-    | MergeCart (List CartEntry) (Maybe String)
+    | MergeCart (List CartEntry)
     | UpdateCart
     | Receive (FetchState Bool)
 
@@ -34,21 +33,18 @@ init =
 update : Msg -> Config -> Session -> Return Session Msg Msg
 update msg config session =
     case msg of
-        Login user path ->
+        Login user ->
             return (Session (Just user) (mergeCart session.shoppingCart user.shoppingCart))
-                |> withCmd (NavUtil.push config path)
                 |> withSessionMsg UpdateCart
 
-        Logout path ->
+        Logout ->
             return { session | user = Nothing, shoppingCart = [] }
-                |> withCmd (NavUtil.replace config path)
 
         Update user ->
             return { session | user = Just user }
 
-        MergeCart cart maybePath ->
+        MergeCart cart ->
             return { session | shoppingCart = CartEntry.mergeCart session.shoppingCart cart }
-                |> withCmd (pushCmd config maybePath)
                 |> withSessionMsg UpdateCart
 
         UpdateCart ->
@@ -57,16 +53,6 @@ update msg config session =
 
         Receive _ ->
             return session
-
-
-pushCmd : Config -> Maybe String -> Cmd msg
-pushCmd config maybePath =
-    case maybePath of
-        Just path ->
-            NavUtil.push config path
-
-        _ ->
-            Cmd.none
 
 
 mergeCart : List CartEntry -> String -> List CartEntry

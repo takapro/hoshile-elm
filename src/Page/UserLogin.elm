@@ -16,7 +16,7 @@ import Shared exposing (Shared)
 import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
 import Util.ListUtil as ListUtil
-import Util.NavUtil exposing (href)
+import Util.NavUtil as NavUtil exposing (href)
 import View.CustomAlert as CustomAlert
 
 
@@ -41,7 +41,7 @@ init _ forPurchase =
 
 
 update : Msg -> Shared t -> Model -> Return Model Msg Session.Msg
-update msg shared model =
+update msg ({ config } as shared) model =
     case msg of
         Email email ->
             return { model | email = email }
@@ -55,7 +55,8 @@ update msg shared model =
 
         Receive (Success user) ->
             return model
-                |> withSessionMsg (Session.Login user (linkPath model "/" "/shoppingCart"))
+                |> withSessionMsg (Session.Login user)
+                |> withCmd (NavUtil.push config (linkPath model "/" "/shoppingCart"))
 
         Receive fetchState ->
             return { model | loginState = Just fetchState }

@@ -12,6 +12,7 @@ import Session
 import Shared exposing (Shared)
 import Util.Api as Api
 import Util.Fetch as Fetch exposing (FetchState(..))
+import Util.NavUtil as NavUtil
 import View.CustomAlert as CustomAlert
 
 
@@ -31,14 +32,15 @@ init { config } id =
 
 
 update : Msg -> Shared t -> Model -> Return Model Msg Session.Msg
-update msg _ model =
+update msg { config } model =
     case msg of
         Receive fetchState ->
             return fetchState
 
         AddToCart id ->
             return model
-                |> withSessionMsg (Session.MergeCart [ CartEntry id 1 ] (Just "/shoppingCart"))
+                |> withSessionMsg (Session.MergeCart [ CartEntry id 1 ])
+                |> withCmd (NavUtil.push config "/shoppingCart")
 
 
 title : Model -> String -> String
