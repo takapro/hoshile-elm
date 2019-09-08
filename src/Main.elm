@@ -106,7 +106,12 @@ update msg ({ config, session } as model) =
             goTo (NavUtil.parse config url) model
 
         UrlRequest (Browser.Internal url) ->
-            ( model, Nav.pushUrl config.nav.key (Url.toString url) )
+            -- Ignore href "#" in Bootstrap.Navbar.dropdown
+            if url.fragment == Just "" then
+                ( model, Cmd.none )
+
+            else
+                ( model, Nav.pushUrl config.nav.key (Url.toString url) )
 
         UrlRequest (Browser.External href) ->
             ( model, Nav.load href )
