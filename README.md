@@ -14,7 +14,7 @@ Original was written in PHP and composed of a Rest API server, store front and a
 Build the `public/app.js` with `elm make` command (or just `make` may work).
 
 ```
-$ elm make src/App.elm --output public/app.js
+$ elm make src/Main.elm --output public/app.js
 ```
 
 Run the dev server, and open the application (http://localhost:8000/) manually.
@@ -40,7 +40,7 @@ Customize the config in `public/index.html`.
         basePath: new URL(document.baseURI).pathname,
         apiBase: "http://localhost:3000/" // change the API server URL here
       };
-      Elm.App.init({ flags: config });
+      Elm.Main.init({ flags: config });
     </script>
   </body>
 ```
