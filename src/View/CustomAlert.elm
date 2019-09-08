@@ -1,4 +1,4 @@
-module View.CustomAlert exposing (error, errorIfFailure, fetchState, loading, maybeFetchState, spinnerLabel)
+module View.CustomAlert exposing (error, errorIfFailure, fetchState, loading, maybeFetchState, spinnerLabel, successOrError)
 
 import Bootstrap.Alert as Alert
 import Bootstrap.Spinner as Spinner
@@ -28,6 +28,16 @@ errorIfFailure action state =
 
         _ ->
             []
+
+
+successOrError : String -> Maybe (FetchState t) -> List (Html msg)
+successOrError action state =
+    case state of
+        Just (Success _) ->
+            [ Alert.simpleSuccess [] [ text (action ++ " succeeded.") ] ]
+
+        _ ->
+            errorIfFailure action state
 
 
 fetchState : String -> FetchState t -> (t -> List (Html msg)) -> List (Html msg)

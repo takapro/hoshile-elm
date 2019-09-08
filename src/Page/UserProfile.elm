@@ -20,7 +20,8 @@ import View.CustomAlert as CustomAlert
 
 
 type alias Model =
-    { name : String
+    { fetchState : Maybe (FetchState User)
+    , name : String
     , email : String
     , curPassword : String
     , password1 : String
@@ -31,7 +32,8 @@ type alias Model =
 
 
 type Msg
-    = Name String
+    = Receive (FetchState User)
+    | Name String
     | Email String
     | CurPassword String
     | Password1 String
@@ -43,18 +45,31 @@ type Msg
 
 
 init : Shared t -> Return Model Msg msg
-init { session } =
+init { config, session } =
     case session.user of
-        Just { name, email } ->
-            return (Model name email "" "" "" Nothing Nothing)
+        Just { token } ->
+            return (Model (Just Loading) "" "" "" "" "" Nothing Nothing)
+                |> withCmd (Fetch.getWithToken Receive User.decoder token (Api.user config "profile"))
 
         Nothing ->
-            return (Model "" "" "" "" "" Nothing Nothing)
+            return (Model Nothing "" "" "" "" "" Nothing Nothing)
 
 
 update : Msg -> Shared t -> Model -> Return Model Msg Session.Msg
 update msg shared model =
     case msg of
+        Receive ((Success user) as fetchState) ->
+            return
+                { model
+                    | fetchState = Just fetchState
+                    , name = user.name
+                    , email = user.email
+                }
+                |> withSessionMsg (Session.Update user)
+
+        Receive fetchState ->
+            return { model | fetchState = Just fetchState }
+
         Name name ->
             return { model | name = name }
 
@@ -74,8 +89,8 @@ update msg shared model =
             return { model | profileState = Just Loading }
                 |> withCmd (profileCmd shared model)
 
-        ReceiveProfile (Success user) ->
-            return { model | profileState = Nothing }
+        ReceiveProfile ((Success user) as fetchState) ->
+            return { model | profileState = Just fetchState }
                 |> withSessionMsg (Session.Update user)
 
         ReceiveProfile fetchState ->
@@ -85,8 +100,8 @@ update msg shared model =
             return { model | passwordState = Just Loading }
                 |> withCmd (passwordCmd shared model)
 
-        ReceivePassword (Success user) ->
-            return { model | passwordState = Nothing }
+        ReceivePassword ((Success user) as fetchState) ->
+            return { model | passwordState = Just fetchState }
                 |> withSessionMsg (Session.Update user)
 
         ReceivePassword fetchState ->
@@ -132,21 +147,19 @@ passwordCmd { config, session } { curPassword, password1 } =
 
 
 view : Shared t -> Model -> Html Msg
-view { session } model =
+view _ model =
     Grid.container [ class "py-4" ]
-        (if session.user == Nothing then
-            [ CustomAlert.error "Not logged in." ]
-
-         else
-            [ Grid.row [ Row.attrs [ class "justify-content-center" ] ]
-                [ Grid.col [ Col.md6 ]
-                    (ListUtil.append3
-                        (profileView model)
-                        [ hr [ class "my-4" ] [] ]
-                        (passwordView model)
-                    )
+        (CustomAlert.maybeFetchState "Not logged in." "Fetch" model.fetchState <|
+            \_ ->
+                [ Grid.row [ Row.attrs [ class "justify-content-center" ] ]
+                    [ Grid.col [ Col.md6 ]
+                        (ListUtil.append3
+                            (profileView model)
+                            [ hr [ class "my-4" ] [] ]
+                            (passwordView model)
+                        )
+                    ]
                 ]
-            ]
         )
 
 
@@ -155,7 +168,7 @@ profileView model =
     ListUtil.append3
         [ h3 [ class "mb-3" ] [ text "Profile" ]
         ]
-        (CustomAlert.errorIfFailure "Profile update" model.profileState)
+        (CustomAlert.successOrError "Profile update" model.profileState)
         [ Form.form []
             [ Form.group []
                 [ Form.label [] [ text "Name" ]
@@ -176,7 +189,7 @@ passwordView model =
     ListUtil.append3
         [ h3 [ class "mb-3" ] [ text "Password" ]
         ]
-        (CustomAlert.errorIfFailure "Password update" model.passwordState)
+        (CustomAlert.successOrError "Password update" model.passwordState)
         [ Form.form []
             [ Form.group []
                 [ Form.label [] [ text "Current Password" ]
